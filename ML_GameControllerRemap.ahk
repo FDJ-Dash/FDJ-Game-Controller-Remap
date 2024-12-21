@@ -7,7 +7,7 @@ Global IconLib := A_ScriptDir . "\Icons"
 , Guide := "https://mean-littles-app.gitbook.io/mean-littles-app-docs"
 , BuyMeACoffee := "https://buymeacoffee.com/fdjdash"
 , IniFile := A_ScriptDir . "\ML_GameControllerRemap.ini"
-, CurrentVersion := "0.53"
+, CurrentVersion := "0.54"
 ;----------------------------------------------------
 ; GUI Properties
 GameToolGui := Gui("+AlwaysOnTop")
@@ -271,13 +271,15 @@ MenuHandlerAbout(*)
 		About.Add("Text", "x80 y8", "ML Game Controller Remap")
 		About.SetFont("s9 cLime", "Comic Sans MS")
 		About.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		About.Add("Text", "x0 y90 w470 h1 +0x5")
 		About.SetFont()
 		About.SetFont("s12 cLime", "Comic Sans MS")
-		About.Add("Text", "x80 y100", "Programmed and designed by:")
-		About.Add("Link", "x310 y100", "<a href=`"https://github.com/FDJ-Dash/ML-Game-Controller-Remap`">FDJ-Dash</a>")
+		About.Add("Text", "x80 y125", "Programmed and designed by:")
+		About.Add("Link", "x310 y125", "<a href=`"https://github.com/FDJ-Dash`">FDJ-Dash</a>")
 		About.SetFont()
 		About.SetFont("s9 cLime", "Comic Sans MS")
-		About.Add("Text", "x30 y200", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
+		About.Add("Text", "x0 y180 w470 h1 +0x5")
+		About.Add("Text", "x30 y203", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
 		ogcButtonOK := About.Add("Button", "x370 y200 w80 h24", "OK")
 		ogcButtonOK.OnEvent("Click", Destroy)
 		About.Title := "About"
@@ -300,13 +302,15 @@ ExitMsg(*){
 		Exitmsg.Add("Text", "x80 y8", "ML Game Controller Remap")
 		Exitmsg.SetFont("s9 cLime", "Comic Sans MS")
 		Exitmsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		Exitmsg.Add("Text", "x0 y90 w470 h1 +0x5")
 		Exitmsg.SetFont()
 		Exitmsg.SetFont("s12 cLime", "Comic Sans MS")
-		Exitmsg.Add("Text", "x45 y100", "ML Game Controller Remap will close in " ExitMessageTimeWait / 1000 " seconds.")
-		Exitmsg.Add("Text", "x175 y130", "Have a nice day!")
+		Exitmsg.Add("Text", "x45 y110", "ML Game Controller Remap will close in " ExitMessageTimeWait / 1000 " seconds.")
+		Exitmsg.Add("Text", "x175 y140", "Have a nice day!")
 		Exitmsg.SetFont()
 		Exitmsg.SetFont("s9 cLime", "Comic Sans MS")
-		Exitmsg.Add("Text", "x30 y200", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
+		Exitmsg.Add("Text", "x0 y180 w470 h1 +0x5")
+		Exitmsg.Add("Text", "x100 y203", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
 		Exitmsg.Title := "Goodbye!"
 		Exitmsg.Show("w470 h240")
 		Exitmsg.Opt("+LastFound")
@@ -327,13 +331,15 @@ MenuHandlerGuide(*) {
 		GuideMsg.Add("Text", "x80 y8", "ML Game Controller Remap")
 		GuideMsg.SetFont("s9 cLime", "Comic Sans MS")
 		GuideMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		GuideMsg.Add("Text", "x0 y90 w470 h1 +0x5")
 		GuideMsg.SetFont()
 		GuideMsg.SetFont("s12 cLime", "Comic Sans MS")
-		GuideMsg.Add("Text", "x105 y100", "The guide will open in your browser.")
-		GuideMsg.Add("Text", "x140 y125", "You can close this message.")
+		GuideMsg.Add("Text", "x105 y110", "The guide will open in your browser.")
+		GuideMsg.Add("Text", "x140 y140", "You can close this message.")
 		GuideMsg.SetFont()
 		GuideMsg.SetFont("s9 cLime", "Comic Sans MS")
-		GuideMsg.Add("Text", "x30 y200", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
+		GuideMsg.Add("Text", "x0 y180 w470 h1 +0x5")
+		GuideMsg.Add("Text", "x30 y203", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
 		ogcButtonOK := GuideMsg.Add("Button", "x370 y200 w80 h24 Default", "OK")
 		ogcButtonOK.OnEvent("Click", Destroy)
 		GuideMsg.Title := "Guide"
