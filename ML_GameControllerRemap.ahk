@@ -7,7 +7,7 @@ Global IconLib := A_ScriptDir . "\Icons"
 , Guide := "https://mean-littles-app.gitbook.io/mean-littles-app-docs"
 , BuyMeACoffee := "https://buymeacoffee.com/fdjdash"
 , IniFile := A_ScriptDir . "\ML_GameControllerRemap.ini"
-, CurrentVersion := "0.54"
+, CurrentVersion := "0.55"
 ;----------------------------------------------------
 ; GUI Properties
 GameToolGui := Gui("+AlwaysOnTop")
@@ -665,7 +665,7 @@ if ControllerAvailable == true {
 					case RotateCameraCtrldown.Value:
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . CtrlDownRotation . " down}")
-						Send("{" . RotateDown . " down}")	
+						Send("{" . RotateDown . " down}")
 					case RotateCameraShiftdown.Value:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " down}")
