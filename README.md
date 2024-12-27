@@ -8,3 +8,5 @@
 ------------------------------------------
 ## Guide Link
 [ML Game Controller Remap Guide](https://mean-littles-app.gitbook.io/mean-littles-app-docs)
+## Support Mail
+- mean.little.software@gmail.com
