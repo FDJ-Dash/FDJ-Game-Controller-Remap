@@ -3,13 +3,12 @@
 SetWorkingDir(A_ScriptDir)
 Global IconLib := A_ScriptDir . "\Icons"
 , ImageLib := A_ScriptDir . "\Images"
-, DonationsLib:= A_ScriptDir . "\Donations"
 , Guide := "https://mean-littles-app.gitbook.io/mean-littles-app-docs"
 , BuyMeACoffee := "https://buymeacoffee.com/fdjdash"
 , IniFile := A_ScriptDir . "\ML_GameControllerRemap.ini"
 , LicenseFile := A_ScriptDir . "\LicenseKey.ini"
-, AppName := "ML Task Automator"
-, CurrentVersion := "1.0"
+, AppName := "ML Game Controller Remap"
+, CurrentVersion := "1.1"
 , BlueFont := "c0x70A0FA"
 , BackgroundDarkGrey := "Background2F2F2F"
 ;----------------------------------------------------
@@ -107,22 +106,6 @@ OptionsMenu.Add("Edit &Ini File", EditIniFileHandler)
 
 try {
 	OptionsMenu.SetIcon("Edit &Ini File", IconLib . "\File.ico")
-}
-catch {
-}
-
-DonationsMenu := Menu()
-MenuBar_Storage.Add("&Donations", DonationsMenu)
-DonationsMenu.Add("Buy me a coffee", DonationsMenuBMACoffeeHandler)
-DonationsMenu.Add("ADA Cardano network", DonationsMenuCardanoHandler)
-DonationsMenu.Add("EVM-compatible chains", DonationsMenuEVMHandler)
-DonationsMenu.Add("BTC - Bitcoin chain", DonationsMenuBTCHandler)
-
-try {
-	DonationsMenu.SetIcon("Buy me a coffee", IconLib . "\Buymeacoffee.ico")
-	DonationsMenu.SetIcon("ADA Cardano network", IconLib . "\ada_cardano.ico")
-	DonationsMenu.SetIcon("EVM-compatible chains", IconLib . "\usdc.ico")
-	DonationsMenu.SetIcon("BTC - Bitcoin chain", IconLib . "\bitcoin.ico")
 }
 catch {
 }
@@ -366,118 +349,13 @@ case LicenseKeyInFile != LicenseKey:
 	ExitApp(2)
 }
 ;----------------------------------------------------
-DonationsMenuCardanoHandler(*){
-ShowCardano:
-		Cardano := Gui("+AlwaysOnTop")
-		Cardano.BackColor := "0x2F2F2F"
-		try {
-			Cardano.Add("Picture", "x-120 y0 w712 h300", DonationsLib . "\CardanoAddress.png")
-		}
-		catch {
-		}
-		Cardano.SetFont("s10 cLime", "Comic Sans MS")
-		Cardano.Add("Text", "x80 y10", " ADA - Cardano Chain - ADA Handle: $grey.dash")
-		Cardano.SetFont()
-		Cardano.SetFont("s9 cLime", "Comic Sans MS")
-		EditADA := Cardano.Add("Edit", "x20 y245 w430 h40 +Readonly", "addr1qxlvz257exqmlfe9edzxgug3vfz59fajc4f6x3mr0053pqvqlegkyt3v299y5mjuxx0zk7ezpvesgqjp69g8q9whykzqtfz2u4")
-		EditADA.Opt("Background2F2F2F")
-		Cardano.Title := "Cardano"
-		Cardano.Show("w470 h300")
-		ControlFocus(" ", "Cardano")
-		Cardano.Opt("+LastFound")
-	Return
-}
-;----------------------------------------------------
-DonationsMenuEVMHandler(*){
-ShowUSDC:
-		EVM := Gui("+AlwaysOnTop")
-		EVM.BackColor := "0x2F2F2F"
-		try {
-			EVM.Add("Picture", "x-120 y0 w712 h300", DonationsLib . "\USDCBaseAddress.png")
-		}
-		catch {
-		}
-		EVM.SetFont("s10 cLime", "Comic Sans MS")
-		EVM.Add("Text", "x43 y10", " Copi, USDC, Ethereum, BNB and any EVM-compatible chain")
-		EVM.SetFont()
-		EVM.SetFont("s9 cLime", "Comic Sans MS")
-		EditEVM := EVM.Add("Edit", "x75 y245 w310 h20 +Readonly", "0xd6F28E0fDacee390Bee8a8E37cdBA458629bf184")
-		EditEVM.Opt("Background2F2F2F")
-		EVM.Title := "EVM"
-		EVM.Show("w470 h300")
-		ControlFocus(" ", "EVM")
-		EVM.Opt("+LastFound")
-	Return
-}
-
-DonationsMenuBTCHandler(*){
-ShowBTC:
-		BTC := Gui("+AlwaysOnTop")
-		BTC.BackColor := "0x2F2F2F"
-		try {
-			BTC.Add("Picture", "x-120 y0 w712 h300", DonationsLib . "\BtcAddress.png")
-		}
-		catch {
-		}
-		BTC.SetFont("s10 cLime", "Comic Sans MS")
-		BTC.Add("Text", "x167 y10", " BTC - Bitcoin chain")
-		BTC.SetFont()
-		BTC.SetFont("s9 cLime", "Comic Sans MS")
-		EditBTC := BTC.Add("Edit", "x88 y245 w285 h20 +Readonly", "bc1qnh2lw9tmkte2yjq9lujc80qq7ke32ps0wj30ss")
-		EditBTC.Opt("Background2F2F2F")
-		BTC.Title := "BTC"
-		BTC.Show("w470 h300")
-		ControlFocus(" ", "BTC")
-		BTC.Opt("+LastFound")
-	Return
-}
-
-DonationsMenuBMACoffeeHandler(*){
-ShowBMACoffee:
-		BMACoffee := Gui("+AlwaysOnTop")
-		BMACoffee.BackColor := "0x2F2F2F"
-		try {
-			BMACoffee.Add("Picture", "x-120 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			BMACoffee.Add("Picture", "x9 y14 w64 h64", IconLib . "\MLCR.ico")
-		}
-		catch {
-		}
-		BMACoffee.SetFont("s18 W700 Q4 cLime", "Georgia")
-		BMACoffee.Add("Text", "x80 y8", AppName)
-		BMACoffee.SetFont("s9 cLime", "Comic Sans MS")
-		BMACoffee.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
-		BMACoffee.Add("Text", "x80 y65", "License key: ")
-		BMACoffee.SetFont()
-		BMACoffee.SetFont("s7 Bold " . BlueFont . "", "Comic Sans MS")
-		BMACoffee.Add("Text", "x160 y68", LicenseKey)
-		BMACoffee.Add("Text", "x0 y90 w470 h1 +0x5")
-		BMACoffee.SetFont()
-		BMACoffee.SetFont("s12 cLime", "Comic Sans MS")
-		BMACoffee.Add("Text", "x50 y100", "My buy me a coffee page will open in your browser.")
-		BMACoffee.Add("Text", "x137 y125", "You can close this message.")
-		BMACoffee.Add("Text", "x187 y150", " Thank you! ")
-		BMACoffee.Add("Text", "x0 y180 w470 h1 +0x5")
-		BMACoffee.SetFont()
-		BMACoffee.SetFont("s9 cLime", "Comic Sans MS")
-		BMACoffee.Add("Text", "x100 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
-		BMACoffee.SetFont()
-		BMACoffee.SetFont("s8 cLime", "Comic Sans MS")
-		BMACoffee.Add("Text", "x120 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
-		BMACoffee.Title := "BMACoffee"
-		BMACoffee.Show("w470 h240")
-		ControlFocus(" ", "BMACoffee")
-		BMACoffee.Opt("+LastFound")
-		Run BuyMeACoffee
-	Return
-}
-;----------------------------------------------------
 InvalidLicenseMsg(*){
 	ShowLicense:
         InvLicMsg := Gui("+AlwaysOnTop")
 		InvLicMsg.BackColor := "0x2F2F2F"
 		try {
 			InvLicMsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			InvLicMsg.Add("Picture", "x9 y14 w64 h64", IconLib . "\MLCR.ico")
+			InvLicMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
 		}
 		catch {
 		}
@@ -513,7 +391,7 @@ LicenseFileMissingMsg(*){
 		NoLicFileMsg.BackColor := "0x2F2F2F"
 		try {
 			NoLicFileMsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			NoLicFileMsg.Add("Picture", "x9 y14 w64 h64", IconLib . "\MLCR.ico")
+			NoLicFileMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
 		}
 		catch {
 		}
@@ -550,12 +428,12 @@ MenuHandlerAbout(*)
 		About.BackColor := "0x2F2F2F"
 		try {
 			About.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			About.Add("Picture", "x9 y14 w64 h64", IconLib . "\MLCR.ico")
+			About.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
 		}
 		catch {
 		}
 		About.SetFont("s18 W700 Q4 cLime", "Georgia")
-		About.Add("Text", "x80 y8", "ML Game Controller Remap")
+		About.Add("Text", "x80 y8", AppName)
 		About.SetFont("s9 cLime", "Comic Sans MS")
 		About.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
 		About.Add("Text", "x80 y65", "License key: ")
@@ -593,7 +471,7 @@ ExitMsg(*){
 		Exitmsg.BackColor := "0x2F2F2F"
 		try {
 			Exitmsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			Exitmsg.Add("Picture", "x9 y14 w64 h64", IconLib . "\MLCR.ico")
+			Exitmsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
 		}
 		catch {
 		}
@@ -645,7 +523,7 @@ MenuHandlerGuide(*) {
 		GuideMsg.BackColor := "0x2F2F2F"
 		try {
 			GuideMsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			GuideMsg.Add("Picture", "x9 y14 w64 h64", IconLib . "\MLCR.ico")
+			GuideMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
 		}
 		catch {
 		}
