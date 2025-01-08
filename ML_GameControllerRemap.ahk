@@ -3,42 +3,62 @@
 SetWorkingDir(A_ScriptDir)
 Global IconLib := A_ScriptDir . "\Icons"
 , ImageLib := A_ScriptDir . "\Images"
-, Guide := "https://mean-littles-app.gitbook.io/mean-littles-app-docs"
-, BuyMeACoffee := "https://buymeacoffee.com/fdjdash"
+, Guide := "https://mean-littles-app.gitbook.io/mean-littles-software"
 , IniFile := A_ScriptDir . "\ML_GameControllerRemap.ini"
 , LicenseFile := A_ScriptDir . "\LicenseKey.ini"
 , AppName := "ML Game Controller Remap"
-, CurrentVersion := "1.1"
-, BlueFont := "c0x70A0FA"
-, BackgroundDarkGrey := "Background2F2F2F"
-;----------------------------------------------------
-; GUI Properties
-ControllerRemapGui := Gui("+AlwaysOnTop")
-ControllerRemapGui.Opt("+MinimizeBox +OwnDialogs -Theme")
-ControllerRemapGui.SetFont("Bold cLime", "Comic Sans MS")
-ControllerRemapGui.BackColor := "0x2F2F2F"
-try {
-	ControllerRemapGui.Add("Picture", "x-16 y0 w304 h712", ImageLib . "\MLCRBackground.png")
-}
-catch {
-}
+, CurrentVersion := "1.2"
+, MLSoftwareIcon := "\Logo-FDJ-Dash.png"
+, DefaultMsgBackgroundImage := "\Smoke2.jpg"
 ;----------------------------------------------------
 ; Read Ini Properties
 if !FileExist(IniFile) {
 	CreateNewIniFile
 }
-ExitMessageTimeWait := IniRead(IniFile, "Properties", "ExitMessageTimeWait")
-SuspendHotkeys := IniRead(IniFile, "Properties", "SuspendHotkeys")
-if SuspendHotkeys > 1 or SuspendHotkeys < 0 {
-	SuspendHotkeys := 0
-	IniWrite SuspendHotkeys, IniFile, "Properties", "SuspendHotkeys"
-}
 ;----------------------------------------------------
-; Read ini Controller
-ControllerLoop := IniRead(IniFile, "Controller", "ControllerLoop")
-if ControllerLoop < 0  {
-	ControllerLoop := 0
-	IniWrite ControllerLoop, IniFile, "Controller", "ControllerLoop"
+; Read ini Font types
+MainFontType := IniRead(IniFile, "FontType", "MainFontType")
+MessageAppNameFontType := IniRead(IniFile, "FontType", "MessageAppNameFontType")
+LicenseKeyFontType := IniRead(IniFile, "FontType", "LicenseKeyFontType")
+MessageMainMsgFontType := IniRead(IniFile, "FontType", "MessageMainMsgFontType")
+MessageFontType := IniRead(IniFile, "FontType", "MessageFontType")
+;----------------------------------------------------
+; Read ini Font Colors
+MainFontColor := "c"
+MainFontColor .= IniRead(IniFile, "FontColors", "MainFontColor")
+;-------------------------------
+MessageAppNameFontColor := "c"
+MessageAppNameFontColor .= IniRead(IniFile, "FontColors", "MessageAppNameFontColor")
+;-------------------------------
+MessageMainMsgFontColor := "c"
+MessageMainMsgFontColor .= IniRead(IniFile, "FontColors", "MessageMainMsgFontColor")
+;-------------------------------
+MessageFontColor := "c"
+MessageFontColor .= IniRead(IniFile, "FontColors", "MessageFontColor")
+;-------------------------------
+LicenseKeyFontColor := "c0x"
+LicenseKeyFontColor .= IniRead(IniFile, "FontColors", "LicenseKeyFontColor")
+;----------------------------------------------------
+; Read ini Background
+BackgroundMainColor := "Background"
+BackgroundColor := IniRead(IniFile, "Background", "BackgroundColor")
+BackgroundMainColor .= BackgroundColor
+;-------------------------------
+BackgroundPicture := IniRead(IniFile, "Background", "BackgroundPicture")
+MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+;----------------------------------------------------
+; Read ini Properties
+ExitMessageTimeWait := IniRead(IniFile, "Properties", "ExitMessageTimeWait")
+GuiPriorityAlwaysOnTop := IniRead(IniFile, "Properties", "GuiPriorityAlwaysOnTop")
+if GuiPriorityAlwaysOnTop < 0 or GuiPriorityAlwaysOnTop > 1 {
+	GuiPriorityAlwaysOnTop := 0
+	IniWrite GuiPriorityAlwaysOnTop, IniFile, "Properties", "GuiPriorityAlwaysOnTop"
+}
+;-------------------------------
+ControllerLoopInterval := IniRead(IniFile, "Properties", "ControllerLoopInterval")
+if ControllerLoopInterval < 0  {
+	ControllerLoopInterval := 0
+	IniWrite ControllerLoopInterval, IniFile, "Properties", "ControllerLoopInterval"
 }
 ;----------------------------------------------------
 ; Read ini Cursor Movement
@@ -48,7 +68,7 @@ CursorSensLeft := IniRead(IniFile, "ControllerCursorMovement", "CursorSensLeft")
 CursorSensUp := IniRead(IniFile, "ControllerCursorMovement", "CursorSensLeft")
 CursorSpeed := IniRead(IniFile, "ControllerCursorMovement", "CursorSpeed")
 ;----------------------------------------------------
-; Controller Camera Rotation
+; Read ini Controller Camera Rotation
 ShiftDownRotation := IniRead(IniFile, "ControllerCameraRotation", "ShiftDownRotation")
 CtrlDownRotation := IniRead(IniFile, "ControllerCameraRotation", "CtrlDownRotation")
 RotateLeft := IniRead(IniFile, "ControllerCameraRotation", "RotateLeft")
@@ -56,7 +76,7 @@ RotateRight := IniRead(IniFile, "ControllerCameraRotation", "RotateRight")
 RotateUp := IniRead(IniFile, "ControllerCameraRotation", "RotateUp")
 RotateDown := IniRead(IniFile, "ControllerCameraRotation", "RotateDown")
 ;----------------------------------------------------
-; Controller Normal Mode Remap
+; Read ini Controller Normal Mode Remap
 ButtonA := IniRead(IniFile, "ControllerNormalModeRemap", "ButtonA")
 ButtonB := IniRead(IniFile, "ControllerNormalModeRemap", "ButtonB")
 ButtonX := IniRead(IniFile, "ControllerNormalModeRemap", "ButtonX")
@@ -68,7 +88,7 @@ ButtonRT := IniRead(IniFile, "ControllerNormalModeRemap", "ButtonRT")
 ButtonBack := IniRead(IniFile, "ControllerNormalModeRemap", "ButtonBack")
 ButtonStart := IniRead(IniFile, "ControllerNormalModeRemap", "ButtonStart")
 ;----------------------------------------------------
-; Controller Race Mode Remap
+; Read ini Controller Race Mode Remap
 AfterBurnerButtonA := IniRead(IniFile, "ControllerRaceModeRemap", "AfterBurnerButtonA")
 ButtonLB := IniRead(IniFile, "ControllerRaceModeRemap", "ButtonLB")
 ButtonRB := IniRead(IniFile, "ControllerRaceModeRemap", "ButtonRB")
@@ -76,7 +96,7 @@ RespawnY := IniRead(IniFile, "ControllerRaceModeRemap", "RespawnY")
 AcelerateButtonRT := IniRead(IniFile, "ControllerRaceModeRemap", "AcelerateButtonRT")
 ReverseButtonLT := IniRead(IniFile, "ControllerRaceModeRemap", "ReverseButtonLT")
 ;----------------------------------------------------
-; Controller Axis Remap
+; Read ini Controller Axis Remap
 TurnLeft := IniRead(IniFile, "ControllerAxisRemap", "TurnLeft")
 TurnRight := IniRead(IniFile, "ControllerAxisRemap", "TurnRight")
 MoveForward := IniRead(IniFile, "ControllerAxisRemap", "MoveForward")
@@ -86,30 +106,60 @@ RightPOV := IniRead(IniFile, "ControllerAxisRemap", "RightPOV")
 ForwadPOV := IniRead(IniFile, "ControllerAxisRemap", "ForwadPOV")
 BackwardPOV := IniRead(IniFile, "ControllerAxisRemap", "BackwardPOV")
 ;----------------------------------------------------
+; GUI Properties
+if GuiPriorityAlwaysOnTop == true {
+	ControllerRemapGui := Gui("+AlwaysOnTop")
+} else {
+	ControllerRemapGui := Gui()
+}
+ControllerRemapGui.Opt("+MinimizeBox +OwnDialogs -Theme")
+ControllerRemapGui.SetFont("Bold " . MainFontColor, MainFontType)
+ControllerRemapGui.BackColor := "0x" . BackgroundColor
+
+if BackgroundPicture == "" {
+	try {
+		ControllerRemapGui.Add("Picture", "x0 y0 w250 h395", ImageLib . "\Smoke1.jpg")
+	}
+	catch {
+	}
+} else {
+	try {
+		ControllerRemapGui.Add("Picture", "x0 y0 w250 h395", BackgroundPicture)
+	}
+	catch {
+		BackgroundPicture := ""
+		IniWrite BackgroundPicture, IniFile, "Background", "BackgroundPicture"
+		Reload
+	}
+}
+;----------------------------------------------------
 ; Setup Menu
 FileMenu := Menu()
 MenuBar_Storage := MenuBar()
 MenuBar_Storage.Add("&File", FileMenu)
 FileMenu.Add("&Exit`tCtrl+K",MenuHandlerExit)
-FileMenu.Add("S&uspend Hotkeys`tCtrl+U",SuspendMenuHandler)
-FileMenu.Insert()
 try {
-	FileMenu.SetIcon("S&uspend Hotkeys`tCtrl+U",IconLib . "\stop.ico")
 	FileMenu.SetIcon("&Exit`tCtrl+K",IconLib . "\exit.ico")
 }
 catch {
 }
-
 OptionsMenu := Menu()
 MenuBar_Storage.Add("&Options", OptionsMenu)
 OptionsMenu.Add("Edit &Ini File", EditIniFileHandler)
+OptionsMenu.Insert()
+OptionsMenu.Add("Change Background &Image", ChangeBackgroundHandler)
+OptionsMenu.Add("Change M&essage Background Image", ChangeMessageBackgroundHandler)
+OptionsMenu.Insert()
+OptionsMenu.Add("&Always On Top: ON/OFF", GuiPriorityAlwaysOnTopHandler)
 
 try {
 	OptionsMenu.SetIcon("Edit &Ini File", IconLib . "\File.ico")
+	OptionsMenu.SetIcon("Change Background &Image", IconLib . "\ChangeBackground.png")
+	OptionsMenu.SetIcon("Change M&essage Background Image", IconLib . "\ChangeBackground.png")
+	OptionsMenu.SetIcon("&Always On Top: ON/OFF", IconLib . "\Switch2.ico")
 }
 catch {
 }
-
 HelpMenu := Menu()
 MenuBar_Storage.Add("&Help", HelpMenu)
 HelpMenu.Add("Guide", MenuHandlerGuide)
@@ -118,14 +168,19 @@ HelpMenu.Insert()
 HelpMenu.Add("About", MenuHandlerAbout)
 
 try {
-	HelpMenu.SetIcon("Guide", IconLib . "\MLCR.ico")
+	HelpMenu.SetIcon("Guide", IconLib . MLSoftwareIcon)
 	HelpMenu.SetIcon("Quick Fix", IconLib . "\Fix.ico")
 	HelpMenu.SetIcon("About", IconLib . "\info.ico")
 }
 catch {
 }
-
 ControllerRemapGui.MenuBar := MenuBar_Storage
+;----------------------------------------------------
+if GuiPriorityAlwaysOnTop == true {
+	OptionsMenu.SetIcon("&Always On Top: ON/OFF", IconLib . "\Switch1.ico")
+} else {
+	OptionsMenu.SetIcon("&Always On Top: ON/OFF", IconLib . "\Switch2.ico")
+}
 ;----------------------------------------------------
 ; Controller
 ControllerRemapGui.Add("Text","x10 y10 w68 h20 +0x200", " Controller:")
@@ -175,11 +230,6 @@ OnExit ExitMenu
 ExitMenu(ExitReason,ExitCode)
 {
 	SB.SetText("Quiting..")
-	SuspendHotkeys := IniRead(IniFile, "Properties", "SuspendHotkeys")
-	if SuspendHotkeys != 0 {
-		SuspendHotkeys := 0
-		IniWrite SuspendHotkeys, IniFile, "Properties", "SuspendHotkeys"
-	}
 	If ExitReason == "Reload" {
 		return 0
 	}
@@ -351,33 +401,53 @@ case LicenseKeyInFile != LicenseKey:
 ;----------------------------------------------------
 InvalidLicenseMsg(*){
 	ShowLicense:
-        InvLicMsg := Gui("+AlwaysOnTop")
-		InvLicMsg.BackColor := "0x2F2F2F"
+		if GuiPriorityAlwaysOnTop == true {
+			InvLicMsg := Gui("+AlwaysOnTop")
+		} else {
+			InvLicMsg := Gui()
+		}
+		InvLicMsg.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
+			try {
+				InvLicMsg.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				InvLicMsg.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
 		try {
-			InvLicMsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			InvLicMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
+			InvLicMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
 		}
 		catch {
 		}
-		InvLicMsg.SetFont("s20 W700 Q4 cLime", "Georgia")
+		InvLicMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
         InvLicMsg.Add("Text", "x80 y8", AppName)
-		InvLicMsg.SetFont("s9 cLime", "Comic Sans MS")
+		InvLicMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		InvLicMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
 		InvLicMsg.Add("Text", "x80 y65", "License key: ")
 		InvLicMsg.SetFont()
-		InvLicMsg.SetFont("s7 Bold cRed", "Comic Sans MS")
-		InvLicMsg.Add("Text", "x160 y68", "???")
+		InvLicMsg.SetFont("s8 Bold cRed", LicenseKeyFontType)
+		InvLicMsg.Add("Text", "x160 y65", "???")
 		InvLicMsg.Add("Text", "x0 y90 w470 h1 +0x5")
 		InvLicMsg.SetFont()
-		InvLicMsg.SetFont("s12 cRed", "Comic Sans MS")
+		InvLicMsg.SetFont("s12 cRed", MessageMainMsgFontType)
 		InvLicMsg.Add("Text", "x167 y110", "Invalid License Key")
         InvLicMsg.Add("Text", "x45 y140", "ML Game Controller Remap will close in " ExitMessageTimeWait / 1000 " seconds")
 		InvLicMsg.SetFont()
-		InvLicMsg.SetFont("s9 cLime", "Comic Sans MS")
+		InvLicMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		InvLicMsg.Add("Text", "x0 y180 w470 h1 +0x5")
 		InvLicMsg.Add("Text", "x100 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
 		InvLicMsg.SetFont()
-		InvLicMsg.SetFont("s8 cLime", "Comic Sans MS")
+		InvLicMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
 		InvLicMsg.Add("Text", "x120 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
         InvLicMsg.Title := "Invalid License Key!"
         InvLicMsg.Show("w470 h240")
@@ -387,33 +457,53 @@ InvalidLicenseMsg(*){
 ;----------------------------------------------------
 LicenseFileMissingMsg(*){
 	ShowMissingLicFile:
-        NoLicFileMsg := Gui("+AlwaysOnTop")
-		NoLicFileMsg.BackColor := "0x2F2F2F"
+		if GuiPriorityAlwaysOnTop == true {
+			NoLicFileMsg := Gui("+AlwaysOnTop")
+		} else {
+			NoLicFileMsg := Gui()
+		}
+		NoLicFileMsg.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
+			try {
+				NoLicFileMsg.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				NoLicFileMsg.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
 		try {
-			NoLicFileMsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			NoLicFileMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
+			NoLicFileMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
 		}
 		catch {
 		}
-		NoLicFileMsg.SetFont("s20 W700 Q4 cLime", "Georgia")
+		NoLicFileMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
         NoLicFileMsg.Add("Text", "x80 y8", AppName)
-		NoLicFileMsg.SetFont("s9 cLime", "Comic Sans MS")
+		NoLicFileMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		NoLicFileMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
 		NoLicFileMsg.Add("Text", "x80 y65", "License key: ")
 		NoLicFileMsg.SetFont()
-		NoLicFileMsg.SetFont("s7 Bold cRed", "Comic Sans MS")
-		NoLicFileMsg.Add("Text", "x160 y68", "???")
+		NoLicFileMsg.SetFont("s8 Bold cRed", LicenseKeyFontType)
+		NoLicFileMsg.Add("Text", "x160 y65", "???")
 		NoLicFileMsg.Add("Text", "x0 y90 w470 h1 +0x5")
 		NoLicFileMsg.SetFont()
-		NoLicFileMsg.SetFont("s12 cRed", "Comic Sans MS")
+		NoLicFileMsg.SetFont("s12 cRed", MessageMainMsgFontType)
 		NoLicFileMsg.Add("Text", "x160 y110", "License file not found")
         NoLicFileMsg.Add("Text", "x45 y140", "ML Game Controller Remap will close in " ExitMessageTimeWait / 1000 " seconds")
 		NoLicFileMsg.SetFont()
-		NoLicFileMsg.SetFont("s9 cLime", "Comic Sans MS")
+		NoLicFileMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		NoLicFileMsg.Add("Text", "x0 y180 w470 h1 +0x5")
 		NoLicFileMsg.Add("Text", "x100 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
 		NoLicFileMsg.SetFont()
-		NoLicFileMsg.SetFont("s8 cLime", "Comic Sans MS")
+		NoLicFileMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
 		NoLicFileMsg.Add("Text", "x120 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
         NoLicFileMsg.Title := "Invalid License Key!"
         NoLicFileMsg.Show("w470 h240")
@@ -424,34 +514,54 @@ LicenseFileMissingMsg(*){
 MenuHandlerAbout(*)
 {
 	ShowAbout:
-		About := Gui("+AlwaysOnTop")
-		About.BackColor := "0x2F2F2F"
+		if GuiPriorityAlwaysOnTop == true {
+			About := Gui("+AlwaysOnTop")
+		} else {
+			About := Gui()
+		}
+		About.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
 		try {
-			About.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			About.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
+				About.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				About.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
+		try {
+			About.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
 		}
 		catch {
 		}
-		About.SetFont("s18 W700 Q4 cLime", "Georgia")
+		About.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
 		About.Add("Text", "x80 y8", AppName)
-		About.SetFont("s9 cLime", "Comic Sans MS")
+		About.SetFont("s9 " . MessageFontColor, MessageFontType)
 		About.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
 		About.Add("Text", "x80 y65", "License key: ")
 		About.SetFont()
-		About.SetFont("s7 Bold " . BlueFont . "", "Comic Sans MS")
-		About.Add("Text", "x160 y68", LicenseKey)
+		About.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
+		About.Add("Text", "x160 y65", LicenseKey)
 		About.Add("Text", "x0 y90 w470 h1 +0x5")
 		About.SetFont()
-		About.SetFont("s12 cLime", "Comic Sans MS")
+		About.SetFont("s12 " . MessageMainMsgFontColor, MessageMainMsgFontType)
 		About.Add("Text", "x80 y115", "Programmed and designed by:")
 		About.Add("Link", "x310 y115", "<a href=`"https://github.com/FDJ-Dash`">FDJ-Dash</a>")
 		About.SetFont()
-		About.SetFont("s9 cLime", "Comic Sans MS")
+		About.SetFont("s9 " . MessageFontColor, MessageFontType)
 		About.Add("Text", "x105 y155", "Support mail: mean.little.software@gmail.com")
 		About.Add("Text", "x0 y180 w470 h1 +0x5")
         About.Add("Text", "x25 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
 		About.SetFont()
-		About.SetFont("s8 cLime", "Comic Sans MS")
+		About.SetFont("s8 " . MessageFontColor, MessageFontType)
 		About.Add("Text", "x25 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
 		ogcButtonOK := About.Add("Button", "x370 y200 w80 h24", "OK")
 		ogcButtonOK.OnEvent("Click", Destroy)
@@ -467,50 +577,58 @@ MenuHandlerAbout(*)
 ;----------------------------------------------------
 ExitMsg(*){
 	ShowExit:
-		Exitmsg := Gui("+AlwaysOnTop")
-		Exitmsg.BackColor := "0x2F2F2F"
+		if GuiPriorityAlwaysOnTop == true {
+			Exitmsg := Gui("+AlwaysOnTop")
+		} else {
+			Exitmsg := Gui()
+		}
+		Exitmsg.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
+			try {
+				Exitmsg.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				Exitmsg.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
 		try {
-			Exitmsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			Exitmsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
+			Exitmsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
 		}
 		catch {
 		}
-		Exitmsg.SetFont("s18 W700 Q4 cLime", "Georgia")
+		Exitmsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
 		Exitmsg.Add("Text", "x80 y8", AppName)
-		Exitmsg.SetFont("s9 cLime", "Comic Sans MS")
+		Exitmsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		Exitmsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
 		Exitmsg.Add("Text", "x80 y65", "License key: ")
 		Exitmsg.SetFont()
-		Exitmsg.SetFont("s7 Bold " . BlueFont . "", "Comic Sans MS")
-		Exitmsg.Add("Text", "x160 y68", LicenseKey)
+		Exitmsg.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
+		Exitmsg.Add("Text", "x160 y65", LicenseKey)
 		Exitmsg.Add("Text", "x0 y90 w470 h1 +0x5")
 		Exitmsg.SetFont()
-		Exitmsg.SetFont("s12 cLime", "Comic Sans MS")
+		Exitmsg.SetFont("s12 " . MessageMainMsgFontColor, MessageMainMsgFontType)
 		Exitmsg.Add("Text", "x45 y110", "ML Game Controller Remap will close in " ExitMessageTimeWait / 1000 " seconds")
         Exitmsg.Add("Text", "x175 y140", "Have a nice day!")
 		Exitmsg.SetFont()
-		Exitmsg.SetFont("s9 cLime", "Comic Sans MS")
+		Exitmsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		Exitmsg.Add("Text", "x0 y180 w470 h1 +0x5")
 		Exitmsg.Add("Text", "x100 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
 		Exitmsg.SetFont()
-		Exitmsg.SetFont("s8 cLime", "Comic Sans MS")
+		Exitmsg.SetFont("s8 " . MessageFontColor, MessageFontType)
 		Exitmsg.Add("Text", "x120 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
         Exitmsg.Title := "Goodbye!"
         Exitmsg.Show("w470 h240")
         Exitmsg.Opt("+LastFound")
 	Return
-}
-;----------------------------------------------------
-SuspendMenuHandler(*){
-	SuspendHotkeys := IniRead(IniFile, "Properties", "SuspendHotkeys")
-	SuspendHotkeys := !SuspendHotkeys
-	IniWrite SuspendHotkeys, IniFile, "Properties", "SuspendHotkeys"
-	if SuspendHotkeys == true {
-		FileMenu.ToggleCheck("S&uspend Hotkeys`tCtrl+U")
-	} else {
-		FileMenu.Uncheck("S&uspend Hotkeys`tCtrl+U")
-	}
-	Suspend
 }
 ;----------------------------------------------------
 MenuHandlerExit(*){
@@ -519,33 +637,53 @@ MenuHandlerExit(*){
 ;----------------------------------------------------
 MenuHandlerGuide(*) {
 	ShowGuide:
-		GuideMsg := Gui("+AlwaysOnTop")
-		GuideMsg.BackColor := "0x2F2F2F"
+		if GuiPriorityAlwaysOnTop == true {
+			GuideMsg := Gui("+AlwaysOnTop")
+		} else {
+			GuideMsg := Gui()
+		}
+		GuideMsg.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
 		try {
-			GuideMsg.Add("Picture", "x-32 y0 w712 h300", ImageLib . "\MLCRBackground2.png")
-			GuideMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . "\MLCR.ico")
+				GuideMsg.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				GuideMsg.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
+		try {
+			GuideMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
 		}
 		catch {
 		}
-		GuideMsg.SetFont("s18 W700 Q4 cLime", "Georgia")
+		GuideMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
 		GuideMsg.Add("Text", "x80 y8", AppName)
-		GuideMsg.SetFont("s9 cLime", "Comic Sans MS")
+		GuideMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		GuideMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
 		GuideMsg.Add("Text", "x80 y65", "License key: ")
 		GuideMsg.SetFont()
-		GuideMsg.SetFont("s7 Bold " . BlueFont . "", "Comic Sans MS")
-		GuideMsg.Add("Text", "x160 y68", LicenseKey)
+		GuideMsg.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
+		GuideMsg.Add("Text", "x160 y65", LicenseKey)
 		GuideMsg.Add("Text", "x0 y90 w470 h1 +0x5")
 		GuideMsg.SetFont()
-		GuideMsg.SetFont("s12 cLime", "Comic Sans MS")
+		GuideMsg.SetFont("s12 " . MessageMainMsgFontColor, MessageMainMsgFontType)
 		GuideMsg.Add("Text", "x100 y110", "The guide will open in your browser.")
         GuideMsg.Add("Text", "x137 y140", "You can close this message.")
 		GuideMsg.SetFont()
-		GuideMsg.SetFont("s9 cLime", "Comic Sans MS")
+		GuideMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		GuideMsg.Add("Text", "x0 y180 w470 h1 +0x5")
 		GuideMsg.Add("Text", "x25 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
 		GuideMsg.SetFont()
-		GuideMsg.SetFont("s8 cLime", "Comic Sans MS")
+		GuideMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
 		GuideMsg.Add("Text", "x25 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
         ogcButtonOK := GuideMsg.Add("Button", "x370 y200 w80 h24 Default", "OK")
 		ogcButtonOK.OnEvent("Click", Destroy)
@@ -570,6 +708,25 @@ MenuHandlerQuickFix(*) {
 ;----------------------------------------------------
 EditIniFileHandler(*) {
 	run IniFile
+}
+;----------------------------------------------------
+ChangeBackgroundHandler(*){
+	SelectedFile := FileSelect(3, "", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
+	IniWrite SelectedFile, IniFile, "Background", "BackgroundPicture"
+	Reload
+}
+;----------------------------------------------------
+ChangeMessageBackgroundHandler(*){
+	SelectedFile := FileSelect(3, "", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
+	IniWrite SelectedFile, IniFile, "Background", "MessageBackgroundPicture"
+	Reload
+}
+;----------------------------------------------------
+GuiPriorityAlwaysOnTopHandler(*){
+	GuiPriorityAlwaysOnTop := IniRead(IniFile, "Properties", "GuiPriorityAlwaysOnTop")
+	GuiPriorityAlwaysOnTop := !GuiPriorityAlwaysOnTop
+	IniWrite GuiPriorityAlwaysOnTop, IniFile, "Properties", "GuiPriorityAlwaysOnTop"
+	Reload
 }
 ;----------------------------------------------------
 if ControllerAvailable == true {
@@ -1022,23 +1179,21 @@ if ControllerAvailable == true {
 			axis_info := " -   -   -   -   -   -   -   -   -   -"
 		}
 		TextAxisInfo.Value := axis_info
-		Sleep ControllerLoop
+		Sleep ControllerLoopInterval
 	} ; End Controller loop
 } ; End Controller Available
 ;----------------------------------------------------
 CreateNewIniFile(*) {
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "; HINT: If you delete this file or move it away from its forder,`n" , IniFile
-	FileAppend "; Task Automator will generate a new file on the spot.`n" , IniFile
+	FileAppend "; Game Controller Remap will generate a new file on the spot.`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "; WARNING: Don't set this file as read only!`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[Properties]`n" , IniFile
 	FileAppend "ExitMessageTimeWait=3000`n" , IniFile
-	FileAppend "SuspendHotkeys=0`n" , IniFile
-	FileAppend ";--------------------------------------------------`n" , IniFile
-	FileAppend "[Controller]`n" , IniFile
-	FileAppend "ControllerLoop=100`n" , IniFile
+	FileAppend "GuiPriorityAlwaysOnTop=1`n" , IniFile
+	FileAppend "ControllerLoopInterval=100`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[ControllerCursorMovement]`n" , IniFile
 	FileAppend "CursorSensRight=100`n" , IniFile
@@ -1084,4 +1239,29 @@ CreateNewIniFile(*) {
 	FileAppend "RespawnY=r`n" , IniFile
 	FileAppend "AcelerateButtonRT=w`n" , IniFile
 	FileAppend "ReverseButtonLT=s`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "[FontType]`n" , IniFile
+	FileAppend "MainFontType=Comic Sans MS`n" , IniFile
+	FileAppend "MessageAppNameFontType=Georgia`n" , IniFile
+	FileAppend "LicenseKeyFontType=Comic Sans MS`n" , IniFile
+	FileAppend "MessageMainMsgFontType=Georgia`n" , IniFile
+	FileAppend "MessageFontType=Georgia`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "; See the list of recommended fonts here: https://www.autohotkey.com/docs/v2/misc/FontsStandard.htm`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "[FontColors]`n" , IniFile
+	FileAppend "MainFontColor=Lime`n" , IniFile
+	FileAppend "MessageAppNameFontColor=Lime`n" , IniFile
+	FileAppend "MessageMainMsgFontColor=Lime`n" , IniFile
+	FileAppend "MessageFontColor=Lime`n" , IniFile
+	FileAppend "LicenseKeyFontColor=70A0FA`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "; See the list of color names and RGB values here: https://www.autohotkey.com/docs/v2/misc/Colors.htm`n" , IniFile
+	FileAppend "; Black Silver Gray White Maroon Red Purple Fuchsia Green Lime Olive Yellow Navy Blue Teal Aqua`n" , IniFile
+	FileAppend "; If the color name you need is not listed you can still write its RGB value`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "[Background]`n" , IniFile
+	FileAppend "BackgroundColor=2F2F2F`n" , IniFile
+	FileAppend "BackgroundPicture=`n" , IniFile
+	FileAppend "MessageBackgroundPicture=`n" , IniFile
 }
