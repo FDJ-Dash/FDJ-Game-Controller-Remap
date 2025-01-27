@@ -1,4 +1,13 @@
-﻿#Requires Autohotkey v2
+﻿; ------------ Credits ------------
+; Creator: Fernando Daniel Jaime.
+; Programmer Alias: FDJ-Dash.
+; Gamer Alias: Mean Little, Grey Dash, Dash.
+; ------------ App Details ------------
+; App Full Name: Mean Little's Game Controller Remap.
+; Description: This is an app aimed towards game controller devices not recognized by some games
+; but still recognized by the Operating System. 
+; --------------------------------
+#Requires Autohotkey v2
 #SingleInstance
 SetWorkingDir(A_ScriptDir)
 Global IconLib := A_ScriptDir . "\Icons"
@@ -6,14 +15,16 @@ Global IconLib := A_ScriptDir . "\Icons"
 , Guide := "https://mean-littles-app.gitbook.io/mean-littles-software"
 , IniFile := A_ScriptDir . "\ML_GameControllerRemap.ini"
 , LicenseFile := A_ScriptDir . "\LicenseKey.ini"
+, DataFile := A_Temp . "\MLGCR_Data.ini"
+, TempCleanFileMLGCR := A_Temp . "\MLGCR_CleanFile.ini"
 , AppName := "ML Game Controller Remap"
-, CurrentVersion := "1.2"
+, CurrentVersion := "v1.3"
 , MLSoftwareIcon := "\Logo-FDJ-Dash.png"
 , DefaultMsgBackgroundImage := "\Smoke2.jpg"
 ;----------------------------------------------------
 ; Read Ini Properties
 if !FileExist(IniFile) {
-	CreateNewIniFile
+	CreateNewIniFile()
 }
 ;----------------------------------------------------
 ; Read ini Font types
@@ -59,6 +70,33 @@ ControllerLoopInterval := IniRead(IniFile, "Properties", "ControllerLoopInterval
 if ControllerLoopInterval < 0  {
 	ControllerLoopInterval := 0
 	IniWrite ControllerLoopInterval, IniFile, "Properties", "ControllerLoopInterval"
+}
+PositionX := IniRead(IniFile, "Properties", "PositionX")
+PositionY := IniRead(IniFile, "Properties", "PositionY")
+if isInteger(PositionX) != true or PositionX == ""{
+	PositionX := A_ScreenWidth / 2 - 200
+}
+if isInteger(PositionY) != true or PositionY == ""{
+	PositionY := 150
+}
+ExitGameControllerRemap := IniRead(IniFile, "Properties", "ExitGameControllerRemap")
+;-------------------------------
+; Read ini Settings
+CheckforUpdatesDaily := IniRead(IniFile, "Settings", "CheckforUpdatesDaily")
+CheckforupdatesWeekly := IniRead(IniFile, "Settings", "CheckforupdatesWeekly")
+NeverCheckForUpdates := IniRead(IniFile, "Settings", "NeverCheckForUpdates")
+LastUpdateCheckTimeStamp := IniRead(IniFile, "Settings", "LastUpdateCheckTimeStamp")
+NeedUpdate := IniRead(IniFile, "Settings", "NeedUpdate")
+switch true {
+case CheckforUpdatesDaily == true:
+	CheckforupdatesWeekly := false
+	NeverCheckForUpdates := false
+case CheckforupdatesWeekly == true:
+	CheckforUpdatesDaily := false
+	NeverCheckForUpdates := false
+case NeverCheckForUpdates == true:
+	CheckforUpdatesDaily := false
+	CheckforupdatesWeekly := false
 }
 ;----------------------------------------------------
 ; Read ini Cursor Movement
@@ -118,13 +156,13 @@ ControllerRemapGui.BackColor := "0x" . BackgroundColor
 
 if BackgroundPicture == "" {
 	try {
-		ControllerRemapGui.Add("Picture", "x0 y0 w250 h395", ImageLib . "\Smoke1.jpg")
+		ControllerRemapGui.Add("Picture", "x0 y0 w250 h422", ImageLib . "\Smoke1.jpg")
 	}
 	catch {
 	}
 } else {
 	try {
-		ControllerRemapGui.Add("Picture", "x0 y0 w250 h395", BackgroundPicture)
+		ControllerRemapGui.Add("Picture", "x0 y0 w250 h422", BackgroundPicture)
 	}
 	catch {
 		BackgroundPicture := ""
@@ -134,15 +172,17 @@ if BackgroundPicture == "" {
 }
 ;----------------------------------------------------
 ; Setup Menu
-FileMenu := Menu()
 MenuBar_Storage := MenuBar()
+;-------------------------------
+FileMenu := Menu()
 MenuBar_Storage.Add("&File", FileMenu)
-FileMenu.Add("&Exit`tCtrl+K",MenuHandlerExit)
+FileMenu.Add("&Exit`t" . ExitGameControllerRemap,MenuHandlerExit)
 try {
-	FileMenu.SetIcon("&Exit`tCtrl+K",IconLib . "\exit.ico")
+	FileMenu.SetIcon("&Exit`t" . ExitGameControllerRemap,IconLib . "\exit.ico")
 }
 catch {
 }
+;-------------------------------
 OptionsMenu := Menu()
 MenuBar_Storage.Add("&Options", OptionsMenu)
 OptionsMenu.Add("Edit &Ini File", EditIniFileHandler)
@@ -160,20 +200,39 @@ try {
 }
 catch {
 }
+;-------------------------------
+SettingsMenu := Menu()
+MenuBar_Storage.Add("&Settings", SettingsMenu)
+SettingsMenu.Add("Check for updates &daily", MenuHandlerCheckUptDaily)
+SettingsMenu.Add("Check for updates &weekly", MenuHandlerCheckUptWeekly)
+SettingsMenu.Add("&Never check for updates", MenuHandlerNeverCheckUpt)
+
+try {
+	SettingsMenu.SetIcon("Check for updates &daily", IconLib . "\CheckDaily.png")
+	SettingsMenu.SetIcon("Check for updates &weekly", IconLib . "\CheckWeekly.png")
+	SettingsMenu.SetIcon("&Never check for updates", IconLib . "\stop.ico")
+}
+catch {
+}
+;-------------------------------
 HelpMenu := Menu()
 MenuBar_Storage.Add("&Help", HelpMenu)
 HelpMenu.Add("Guide", MenuHandlerGuide)
 HelpMenu.Add("Quick Fix", MenuHandlerQuickFix)
 HelpMenu.Insert()
+HelpMenu.Add("Update", MenuHandlerUpdate)
+HelpMenu.Insert()
 HelpMenu.Add("About", MenuHandlerAbout)
 
 try {
-	HelpMenu.SetIcon("Guide", IconLib . MLSoftwareIcon)
+	HelpMenu.SetIcon("Guide", IconLib . "\Logo-MLGCR.ico")
 	HelpMenu.SetIcon("Quick Fix", IconLib . "\Fix.ico")
+	HelpMenu.SetIcon("Update", IconLib . "\Update.png")
 	HelpMenu.SetIcon("About", IconLib . "\info.ico")
 }
 catch {
 }
+;-------------------------------
 ControllerRemapGui.MenuBar := MenuBar_Storage
 ;----------------------------------------------------
 if GuiPriorityAlwaysOnTop == true {
@@ -216,22 +275,134 @@ RotateCamera := ControllerRemapGui.Add("Radio", "x20 y245 h20", " Rotate with ar
 RotateCameraCtrldown := ControllerRemapGui.Add("Radio", "x20 y270 h20", " Rotate Ctrl Down + arrow keys")
 RotateCameraShiftdown := ControllerRemapGui.Add("Radio", "x20 y295 h20", " Rotate Shift Down + arrow keys")
 ControllerRemapGui.Add("Text", "x1 y318 w250 h2 +0x10") ; Separator
-ControllerRemapGui.Add("Text","x10 y320 h20 +0x200", " ADVICE: Minimize the app once you check")
-ControllerRemapGui.Add("Text","x10 y345 h20 +0x200", " any rotation to avoid switching selectors.")
+ControllerRemapGui.Add("Text","x10 y323 h20 +0x200", " ADVICE: Minimize the app once you check")
+ControllerRemapGui.Add("Text","x10 y348 h20 +0x200", " any rotation to avoid switching selectors.")
+;----------------------------------------------------
+; Check for updates
+; A_Now - The current local time in YYYYMMDDHH24MISS format.
+;-------------------------------
+ControllerRemapGui.Add("Text", "x1 y371 w250 h2 +0x10") ; Separator
+FlagCheckTime := false
+GreenIcon := ""
+YellowIcon := ""
+BlueIcon := ""
+RedIcon := ""
+if CheckforUpdatesDaily == true and 
+	(LastUpdateCheckTimeStamp == "" or DateDiff(A_Now, LastUpdateCheckTimeStamp, "Days") > 0) {
+	FlagCheckTime := true
+} 
+;-------------------------------
+if CheckforupdatesWeekly == true and 
+	(LastUpdateCheckTimeStamp == "" or DateDiff(A_Now, LastUpdateCheckTimeStamp, "Days") > 6) {
+	FlagCheckTime := true
+}
+
+switch true {
+case NeverCheckForUpdates == true:
+	ControllerRemapGui.Add("Text","x10 y376 h20 +0x200", "Update check: ")
+	ControllerRemapGui.SetFont("s8 Bold c00A8F3", LicenseKeyFontType)
+	ControllerRemapGui.Add("Text","x97 y376 w126 h20 +0x200", " Update check disabled ")
+	try {
+		ControllerRemapGui.Add("Picture", "x230 y380 w10 h10 +border", IconLib . "\UpdateCheckDisabled.png")
+	}
+	catch {
+	}
+case NeedUpdate == true:
+	ControllerRemapGui.Add("Text","x10 y376 h20 +0x200", "Update check: ")
+	ControllerRemapGui.SetFont("s8 Bold cYellow", LicenseKeyFontType)
+	ControllerRemapGui.Add("Text","x97 y376 w126 h20 +0x200", " New version available ")
+	try {
+		ControllerRemapGui.Add("Picture", "x230 y380 w10 h10 +border", IconLib . "\NewVersionAvailable.png")
+	}
+	catch {
+	}
+case FlagCheckTime == false and NeedUpdate == false:
+	ControllerRemapGui.Add("Text","x10 y376 h20 +0x200", "Update check: ")
+	ControllerRemapGui.SetFont("s8 Bold cLime", LicenseKeyFontType)
+	ControllerRemapGui.Add("Text","x97 y376 w126 h20 +0x200", " Version up to date ")
+	try {
+		ControllerRemapGui.Add("Picture", "x230 y380 w10 h10 +border", IconLib . "\UpToDate.png")
+	}
+	catch {
+	}
+}
+;-------------------------------
+if FlagCheckTime == true {
+	Connected := CheckConnection()
+	if Connected != true {
+		ControllerRemapGui.Add("Text","x10 y376 h20 +0x200", "Update check: ")
+		ControllerRemapGui.SetFont("s8 Bold cRed", LicenseKeyFontType)
+		ControllerRemapGui.Add("Text","x97 y376 h20 +0x200", " No internet connection ")
+		try {
+			ControllerRemapGui.Add("Picture", "x230 y380 w10 h10 +border", IconLib . "\NoInternetConnection.png")
+		}
+		catch {
+		}
+	} else {
+		if !FileExist(DataFile) {
+			ParseRequest()
+		}
+		MLGCRLatestReleaseVersion := IniRead(DataFile, "GeneralData", "MLGCRLatestReleaseVersion")
+		if MLGCRLatestReleaseVersion == "" {
+			ParseRequest()
+		}
+		DownloadUrl := IniRead(DataFile, "EncriptedData", "MLGCRDownload")
+		MLGCRLatestReleaseVersion := IniRead(DataFile, "GeneralData", "MLGCRLatestReleaseVersion")
+		if MLGCRLatestReleaseVersion != CurrentVersion {
+			if DownloadUrl != "" {
+				ControllerRemapGui.Add("Text","x10 y376 h20 +0x200", "Update check: ")
+				ControllerRemapGui.SetFont("s8 Bold cYellow", LicenseKeyFontType)
+				ControllerRemapGui.Add("Text","x101 y376 h20 +0x200", " New version available ")
+				try {
+					ControllerRemapGui.Add("Picture", "x230 y380 w10 h10 +border", IconLib . "\NewVersionAvailable.png")
+				}
+				catch {
+				}
+				NeedUpdate := true
+				IniWrite NeedUpdate, IniFile, "Settings", "NeedUpdate"
+			}
+		}
+		if MLGCRLatestReleaseVersion == CurrentVersion {
+			ControllerRemapGui.Add("Text","x10 y376 h20 +0x200", "Update check: ")
+			ControllerRemapGui.SetFont("s8 Bold cLime", LicenseKeyFontType)
+			ControllerRemapGui.Add("Text","x128 y376 h20 +0x200", " Up to date ")
+			try {
+				ControllerRemapGui.Add("Picture", "x230 y380 w10 h10 +border", IconLib . "\UpToDate.png")
+			}
+			catch {
+			}
+		}
+		IniWrite A_Now, IniFile, "Settings", "LastUpdateCheckTimeStamp"
+	}
+}
 ;----------------------------------------------------
 SB := ControllerRemapGui.Add("StatusBar", , "Ready.")
 ;----------------------------------------------------
 ControllerRemapGui.OnEvent('Close', (*) => ExitApp())
-ControllerRemapGui.Title := "ML Game Controller Remap"
-ControllerRemapGui.Show("w250 h395")
+ControllerRemapGui.Title := AppName
+ControllerRemapGui.Show("x" . PositionX . " y" . PositionY . " w250 h422")
 Saved := ControllerRemapGui.Submit(false)
+
 ;----------------------------------------------------
 OnExit ExitMenu
 ExitMenu(ExitReason,ExitCode)
 {
 	SB.SetText("Quiting..")
+	ControllerRemapGui.GetPos(&PosX, &PosY)
+	if PosX != -32000 {
+		IniWrite PosX, IniFile, "Properties", "PositionX"
+	}
+	if PosY != -32000 {
+		IniWrite PosY, IniFile, "Properties", "PositionY"
+	}
 	If ExitReason == "Reload" {
 		return 0
+	}
+	try {
+		FileDelete DataFile
+		FileDelete TempCleanFileMLGCR
+	}
+	catch {
 	}
 	If ExitCode == 2 {
 		InvalidLicenseMsg
@@ -306,82 +477,15 @@ Loop Read, TempFile
 }
 
 MixedPattern := "Az0By9Cx7Da8Eb2Fc4Gw3Hv5Ij6Js1KlLhMpNeOtPgQnRrSiTqUoVkWmXdYfZu"
+PunctuationPattern := "!#$%&'()*+,-./:;<=>?@[\]^_`{|}~ "
 if FlagError == 0 {
 	StringMacAddress := MacAddress[Count]
 } else {
 	StringMacAddress := MacAddress
 }
-LicenseKey := ""
-Count := 0
-flag := 0
-Loop Parse StringMacAddress {
-	; 48 - 57
-	if ord(A_LoopField) == 45 {
-		if flag == 4 {
-			LicenseKey .= "\"
-		} else if flag == 3 {
-			LicenseKey .= "@"
-			flag := 4
-		} else if flag == 2 {
-			LicenseKey .= "["
-			flag := 3
-		} else if flag == 1 {
-			LicenseKey .= "!"
-			flag := 2
-		} else {
-			LicenseKey .= "."
-			flag := 1
-		}	
-	}
-	if ord(A_LoopField) == 46 {
-		LicenseKey .= "-"
-	}
-	if ord(A_LoopField) < 58 {
-		; (0,9)
-		EncriptedString := A_LoopField
-		for index, letter in StrSplit(MixedPattern) {
-			if (letter == A_LoopField) {
-				LicenseKey .= chr(index + 36)
-				LicenseKey .= chr(index + 45)
-				LicenseKey .= chr(index + 33)
-				break
-			}
-		}
-	}
-	
-	if ord(A_LoopField) == 58 {
-		LicenseKey .= ";"
-	}
-	if ord(A_LoopField) == 59 {
-		LicenseKey .= ":"
-	}
-	; 65 - 90
-	if ord(A_LoopField) > 66 and ord(A_LoopField) < 91 {
-		; (0,25) + 10 = (10,35)
-		EncriptedString := A_LoopField
-		for index, letter in StrSplit(MixedPattern) {
-			if (letter == A_LoopField) {
-				LicenseKey .= chr(index + 60)
-				LicenseKey .= chr(index + 44)
-				LicenseKey .= chr(index + 32)
-				break
-			}
-		}
-	}
-	; 97 - 122
-	if ord(A_LoopField) > 96 and ord(A_LoopField) < 123 {
-		; (0,26) + 10 + 26 = (36,61)
-		EncriptedString := A_LoopField
-		for index, letter in StrSplit(MixedPattern) {
-			if (letter == A_LoopField) {
-				LicenseKey .= chr(index + 40)
-				LicenseKey .= chr(index + 26)
-				LicenseKey .= chr(index + 31)
-				break
-			}
-		}
-	}
-}
+
+LicenseKey := EncriptMsg(StringMacAddress)
+
 try {
 	LicenseKeyInFile := IniRead(LicenseFile, "Data", "LicenseKey")
 }
@@ -397,6 +501,13 @@ case LicenseKeyInFile == LicenseKey:
 case LicenseKeyInFile != LicenseKey:
 	; Invalid License
 	ExitApp(2)
+}
+
+try {
+	FileDelete TempFile
+}
+catch {
+
 }
 ;----------------------------------------------------
 InvalidLicenseMsg(*){
@@ -432,7 +543,7 @@ InvalidLicenseMsg(*){
 		InvLicMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
         InvLicMsg.Add("Text", "x80 y8", AppName)
 		InvLicMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
-		InvLicMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		InvLicMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
 		InvLicMsg.Add("Text", "x80 y65", "License key: ")
 		InvLicMsg.SetFont()
 		InvLicMsg.SetFont("s8 Bold cRed", LicenseKeyFontType)
@@ -450,7 +561,8 @@ InvalidLicenseMsg(*){
 		InvLicMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
 		InvLicMsg.Add("Text", "x120 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
         InvLicMsg.Title := "Invalid License Key!"
-        InvLicMsg.Show("w470 h240")
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+        InvLicMsg.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
         InvLicMsg.Opt("+LastFound")
     Return
 }
@@ -488,7 +600,7 @@ LicenseFileMissingMsg(*){
 		NoLicFileMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
         NoLicFileMsg.Add("Text", "x80 y8", AppName)
 		NoLicFileMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
-		NoLicFileMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		NoLicFileMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
 		NoLicFileMsg.Add("Text", "x80 y65", "License key: ")
 		NoLicFileMsg.SetFont()
 		NoLicFileMsg.SetFont("s8 Bold cRed", LicenseKeyFontType)
@@ -506,13 +618,229 @@ LicenseFileMissingMsg(*){
 		NoLicFileMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
 		NoLicFileMsg.Add("Text", "x120 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
         NoLicFileMsg.Title := "Invalid License Key!"
-        NoLicFileMsg.Show("w470 h240")
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+        NoLicFileMsg.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
         NoLicFileMsg.Opt("+LastFound")
     Return
 }
 ;----------------------------------------------------
-MenuHandlerAbout(*)
-{
+ConnectionMessage(*) {
+	ShowConnection:
+		if GuiPriorityAlwaysOnTop == true {
+			ConnectionMsg := Gui("+AlwaysOnTop")
+		} else {
+			ConnectionMsg := Gui()
+		}
+		ConnectionMsg.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
+		try {
+				ConnectionMsg.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				ConnectionMsg.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
+		try {
+			ConnectionMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
+		}
+		catch {
+		}
+		ConnectionMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
+		ConnectionMsg.Add("Text", "x80 y8", AppName)
+		ConnectionMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
+		ConnectionMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
+		ConnectionMsg.Add("Text", "x80 y65", "License key: ")
+		ConnectionMsg.SetFont()
+		ConnectionMsg.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
+		ConnectionMsg.Add("Text", "x160 y65", LicenseKey)
+		ConnectionMsg.Add("Text", "x0 y90 w470 h1 +0x5")
+		ConnectionMsg.SetFont()
+		ConnectionMsg.SetFont("s12 cRed", MessageMainMsgFontType)
+		ConnectionMsg.Add("Text", "x125 y110", "Unable to check for new updates.")
+		ConnectionMsg.Add("Text", "x135 y140", "Please verify your connection")		
+		ConnectionMsg.SetFont()
+		ConnectionMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
+		ConnectionMsg.Add("Text", "x0 y180 w470 h1 +0x5")
+        ConnectionMsg.Add("Text", "x25 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
+		ConnectionMsg.SetFont()
+		ConnectionMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
+		ConnectionMsg.Add("Text", "x25 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
+		ogcButtonOK := ConnectionMsg.Add("Button", "x370 y200 w80 h24", "OK")
+		ogcButtonOK.OnEvent("Click", Destroy)
+        ConnectionMsg.Title := "Connection Failed!"
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+        ConnectionMsg.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
+        ControlFocus("Button1", "Connection Failed!")
+        ConnectionMsg.Opt("+LastFound")
+	Return
+	Destroy(*){
+		ConnectionMsg.Destroy()
+	}
+}
+;----------------------------------------------------
+UpToDateMessage(*) {
+	ShowUpToDate:
+		if GuiPriorityAlwaysOnTop == true {
+			UpToDateMsg := Gui("+AlwaysOnTop")
+		} else {
+			UpToDateMsg := Gui()
+		}
+		UpToDateMsg.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
+		try {
+				UpToDateMsg.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				UpToDateMsg.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
+		try {
+			UpToDateMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
+		}
+		catch {
+		}
+		UpToDateMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
+		UpToDateMsg.Add("Text", "x80 y8", AppName)
+		UpToDateMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
+		UpToDateMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
+		UpToDateMsg.Add("Text", "x80 y65", "License key: ")
+		UpToDateMsg.SetFont()
+		UpToDateMsg.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
+		UpToDateMsg.Add("Text", "x160 y65", LicenseKey)
+		UpToDateMsg.Add("Text", "x0 y90 w470 h1 +0x5")
+		UpToDateMsg.SetFont()
+		UpToDateMsg.SetFont("s12 " . MessageMainMsgFontColor, MessageMainMsgFontType)
+		UpToDateMsg.Add("Text", "x135 y123", "Current version is up to date!")
+		UpToDateMsg.SetFont()
+		UpToDateMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
+		UpToDateMsg.Add("Text", "x0 y180 w470 h1 +0x5")
+        UpToDateMsg.Add("Text", "x25 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
+		UpToDateMsg.SetFont()
+		UpToDateMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
+		UpToDateMsg.Add("Text", "x25 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
+		ogcButtonOK := UpToDateMsg.Add("Button", "x370 y200 w80 h24", "OK")
+		ogcButtonOK.OnEvent("Click", Destroy)
+        UpToDateMsg.Title := "Up To Date!"
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+        UpToDateMsg.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
+        ControlFocus("Button1", "Up To Date!")
+        UpToDateMsg.Opt("+LastFound")
+	Return
+	Destroy(*){
+		UpToDateMsg.Destroy()
+	}
+}
+;----------------------------------------------------
+NewVersionAvailableMessage(ReleaseVersion, *) {
+	ShowNewVerMsg:
+		if GuiPriorityAlwaysOnTop == true {
+			NewVerMsg := Gui("+AlwaysOnTop")
+		} else {
+			NewVerMsg := Gui()
+		}
+		NewVerMsg.BackColor := "0x" . BackgroundColor
+		MessageBackgroundPicture := IniRead(IniFile, "Background", "MessageBackgroundPicture")
+		if MessageBackgroundPicture == "" {
+		try {
+				NewVerMsg.Add("Picture", "x0 y0 w470 h240", ImageLib . DefaultMsgBackgroundImage)
+			}
+			catch {
+			}
+		} else {
+			try {
+				NewVerMsg.Add("Picture", "x0 y0 w470 h240", MessageBackgroundPicture)
+			}
+			catch {
+				MessageBackgroundPicture := ""
+				IniWrite MessageBackgroundPicture, IniFile, "Background", "MessageBackgroundPicture"
+				Reload
+			}
+		}
+		try {
+			NewVerMsg.Add("Picture", "x9 y14 w64 h64 +border", IconLib . MLSoftwareIcon)
+		}
+		catch {
+		}
+		NewVerMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
+		NewVerMsg.Add("Text", "x80 y8", AppName)
+		NewVerMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
+		NewVerMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
+		NewVerMsg.Add("Text", "x80 y65", "License key: ")
+		NewVerMsg.SetFont()
+		NewVerMsg.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
+		NewVerMsg.Add("Text", "x160 y65", LicenseKey)
+		NewVerMsg.Add("Text", "x0 y90 w470 h1 +0x5")
+		NewVerMsg.SetFont()
+		NewVerMsg.SetFont("s12 " . MessageMainMsgFontColor, MessageMainMsgFontType)
+		NewVerMsg.Add("Text", "x100 y115", "New release version " . ReleaseVersion . " is available")
+		NewVerMsg.SetFont()
+		NewVerMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
+		ogcButtonUpdate := NewVerMsg.Add("Button", "x190 y145 w80 h24", "Download")
+		ogcButtonUpdate.OnEvent("Click", UpdateDownload)
+		NewVerMsg.Add("Text", "x0 y180 w470 h1 +0x5")
+        NewVerMsg.Add("Text", "x25 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
+		NewVerMsg.SetFont()
+		NewVerMsg.SetFont("s8 " . MessageFontColor, MessageFontType)
+		NewVerMsg.Add("Text", "x25 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
+		ogcButtonOK := NewVerMsg.Add("Button", "x370 y200 w80 h24", "Close")
+		ogcButtonOK.OnEvent("Click", Destroy)
+        NewVerMsg.Title := "New Version Available!"
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+        NewVerMsg.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
+        ControlFocus("Button1", "New Version Available!")
+        NewVerMsg.Opt("+LastFound")
+		NewVerMsg.OnEvent("Close", NewVerMsg_Close)
+	Return
+	Destroy(*){
+		NewVerMsg.Destroy()
+	}
+	UpdateDownload(*){
+		MLGCRName := IniRead(DataFile, "GeneralData", "MLGCRName")
+		; Scaped character included: ``
+		MLGCRDownloadPart1 := "NJdlcj]YIG27Q]LFCM\dIG27?HLFR\./FMNJLTY``ea86FK19Y``a]FNelNJ19]dmiZbah:4qm7?]dc_NVCMRYeaT\[bHD^fDBFK82FRWaDB*3szeaHPipkgV^7>HDNVelqmRZ5:LF]dqm\d[bieWaPXeleaHPszKGCAJR@Gea@EDAEP./COHQ45_kFT*3)&T\OVFG:FBM``iPQuq@Ldl=DT]F@CQRS]ikgBK\d:;IUNWLSa](0XY_kZcRYEA(0\]ah4@;89Da]NWFNIW]dWSCKFM,)B>TUHP]iahEA<E@H@AEPmt4@4B9B:;O[;8<G9B@NLM4@dmNJV^jk_fR\"
+		MLGCRDownloadPart1 := DecriptMsg(MLGCRDownloadPart1)
+		;------------------------
+		MLGCRDownloadPart2 := IniRead(DataFile, "EncriptedData", "MLGCRDownload")
+		MLGCRDownloadPart2 := DecriptMsg(MLGCRDownloadPart2)
+		;------------------------
+		MLGCRDownloadPart3 := "53qm"
+		MLGCRDownloadPart3 := DecriptMsg(MLGCRDownloadPart3)
+		;------------------------
+		MLGCRDownloadPart4 := FileSelect("S16", A_MyDocuments . "\" . MLGCRName , "Save File", "Executable files (*.exe)")
+		FullPathDownLoad := MLGCRDownloadPart1 . " " . MLGCRDownloadPart2 . " " . MLGCRDownloadPart3 . " " . MLGCRDownloadPart4
+		if MLGCRDownloadPart4 != "" {
+			RunWait(A_ComSpec " /c " . FullPathDownLoad . " > " TempCleanFileMLGCR, , "Hide")
+		}
+		NewVerMsg.Destroy()
+	}
+	NewVerMsg_Close(*){
+		try {
+			FileDelete TempCleanFileMLGCR
+		}
+		catch {
+		}
+	}
+}
+;----------------------------------------------------
+MenuHandlerAbout(*) {
 	ShowAbout:
 		if GuiPriorityAlwaysOnTop == true {
 			About := Gui("+AlwaysOnTop")
@@ -545,7 +873,7 @@ MenuHandlerAbout(*)
 		About.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
 		About.Add("Text", "x80 y8", AppName)
 		About.SetFont("s9 " . MessageFontColor, MessageFontType)
-		About.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		About.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
 		About.Add("Text", "x80 y65", "License key: ")
 		About.SetFont()
 		About.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
@@ -566,7 +894,8 @@ MenuHandlerAbout(*)
 		ogcButtonOK := About.Add("Button", "x370 y200 w80 h24", "OK")
 		ogcButtonOK.OnEvent("Click", Destroy)
         About.Title := "About"
-        About.Show("w470 h240")
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+        About.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
         ControlFocus("Button1", "About")
         About.Opt("+LastFound")
 	Return
@@ -608,7 +937,7 @@ ExitMsg(*){
 		Exitmsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
 		Exitmsg.Add("Text", "x80 y8", AppName)
 		Exitmsg.SetFont("s9 " . MessageFontColor, MessageFontType)
-		Exitmsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		Exitmsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
 		Exitmsg.Add("Text", "x80 y65", "License key: ")
 		Exitmsg.SetFont()
 		Exitmsg.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
@@ -621,12 +950,19 @@ ExitMsg(*){
 		Exitmsg.SetFont()
 		Exitmsg.SetFont("s9 " . MessageFontColor, MessageFontType)
 		Exitmsg.Add("Text", "x0 y180 w470 h1 +0x5")
-		Exitmsg.Add("Text", "x100 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
+		Exitmsg.Add("Text", "x107 y190", "Copyright 2024 FDJ-Dash. All Rights Reserved.")
 		Exitmsg.SetFont()
 		Exitmsg.SetFont("s8 " . MessageFontColor, MessageFontType)
-		Exitmsg.Add("Text", "x120 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
+		Exitmsg.Add("Text", "x116 y212", "Made with AutoHotkey V" A_AhkVersion . " " . (1 ? "Unicode" : "ANSI") . " " . (A_PtrSize == 8 ? "64-bit" : "32-bit"))
         Exitmsg.Title := "Goodbye!"
-        Exitmsg.Show("w470 h240")
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+		if PosX == -32000 {
+			PosX := IniRead(IniFile, "Properties", "PositionX")
+		}
+		if PosY == -32000 {
+			PosY := IniRead(IniFile, "Properties", "PositionY")
+		}
+        Exitmsg.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
         Exitmsg.Opt("+LastFound")
 	Return
 }
@@ -668,7 +1004,7 @@ MenuHandlerGuide(*) {
 		GuideMsg.SetFont("s20 W700 Q4 " . MessageAppNameFontColor, MessageAppNameFontType)
 		GuideMsg.Add("Text", "x80 y8", AppName)
 		GuideMsg.SetFont("s9 " . MessageFontColor, MessageFontType)
-		GuideMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap v" CurrentVersion)
+		GuideMsg.Add("Text", "x80 y45", "Mean Little's Game Controller Remap " CurrentVersion)
 		GuideMsg.Add("Text", "x80 y65", "License key: ")
 		GuideMsg.SetFont()
 		GuideMsg.SetFont("s8 Bold " . LicenseKeyFontColor, LicenseKeyFontType)
@@ -688,7 +1024,8 @@ MenuHandlerGuide(*) {
         ogcButtonOK := GuideMsg.Add("Button", "x370 y200 w80 h24 Default", "OK")
 		ogcButtonOK.OnEvent("Click", Destroy)
         GuideMsg.Title := "Guide"
-        GuideMsg.Show("w470 h240")
+		ControllerRemapGui.GetPos(&PosX, &PosY)
+        GuideMsg.Show("x" . PosX - 150 . " y" . PosY + 120 . "w470 h240")
         ControlFocus("Button1", "Guide")
         GuideMsg.Opt("+LastFound")
 		run Guide
@@ -699,10 +1036,580 @@ MenuHandlerGuide(*) {
 	}
 }
 ;----------------------------------------------------
+EncriptMsg(OriginalMsg, *){
+	MixedPattern := "Az0By9Cx7Da8Eb2Fc4Gw3Hv5Ij6Js1KlLhMpNeOtPgQnRrSiTqUoVkWmXdYfZu"
+	PunctuationPattern := "!#$%&'()*+,-./:;<=>?@[\]^_`"{|}~ "
+	
+	EncriptedMsg := ""
+	FlagSignCount := 0
+	FlagNmCount := 0
+	Flag_az_Count := 0
+	Flag_AZ_Count2 := 0
+	Loop Parse OriginalMsg {
+		switch true {
+		case ord(A_LoopField) > 31 and ord(A_LoopField) < 48:
+			; punctuation signs
+			for index, letter in StrSplit(PunctuationPattern) {
+				switch true {
+				case FlagSignCount == 0:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 7)
+						EncriptedMsg .= chr(index + 34 + 5)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 1:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 4)
+						EncriptedMsg .= chr(index + 34 + 9)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 2:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 10)
+						EncriptedMsg .= chr(index + 34 + 4)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 3:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 21)
+						EncriptedMsg .= chr(index + 34 + 31)
+						FlagSignCount := 0
+						break
+					}
+				}
+			}
+		case ord(A_LoopField) > 47 and ord(A_LoopField) < 58:
+			; (0,9)
+			EncriptedString := A_LoopField
+			for index, letter in StrSplit(MixedPattern) {
+				switch true {
+				case FlagNmCount == 0:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 4)
+						EncriptedMsg .= chr(index + 34 + 1)
+						FlagNmCount++
+						break
+					}
+				case FlagNmCount == 1:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 5)
+						EncriptedMsg .= chr(index + 34 + 16)
+						FlagNmCount++
+						break
+					}
+				case FlagNmCount == 2:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 9)
+						EncriptedMsg .= chr(index + 34 + 23)
+						FlagNmCount := 0
+						break
+					}
+				}
+			}
+		case ord(A_LoopField) > 57 and ord(A_LoopField) < 65:
+			; punctuation signs
+			for index, letter in StrSplit(PunctuationPattern) {
+				switch true {
+				case FlagSignCount == 0:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 7)
+						EncriptedMsg .= chr(index + 34 + 5)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 1:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 4)
+						EncriptedMsg .= chr(index + 34 + 9)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 2:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 10)
+						EncriptedMsg .= chr(index + 34 + 4)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 3:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 21)
+						EncriptedMsg .= chr(index + 34 + 31)
+						FlagSignCount := 0
+						break
+					}
+				}
+			}
+		case ord(A_LoopField) > 64 and ord(A_LoopField) < 91:
+			; (A-Z)
+			EncriptedString := A_LoopField
+			for index, letter in StrSplit(MixedPattern) {
+				switch true {
+				case Flag_AZ_Count2 == 0:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 14)
+						EncriptedMsg .= chr(index + 34 + 26)
+						Flag_AZ_Count2++
+						break
+					}
+				case Flag_AZ_Count2 == 1:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 7)
+						EncriptedMsg .= chr(index + 34 + 16)
+						Flag_AZ_Count2++
+						break
+					}
+				case Flag_AZ_Count2 == 2:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 11)
+						EncriptedMsg .= chr(index + 34 + 12)
+						Flag_AZ_Count2 := 0
+						break
+					}
+				}
+			}
+		case ord(A_LoopField) > 90 and ord(A_LoopField) < 97:
+			; punctuation signs
+			for index, letter in StrSplit(PunctuationPattern) {
+				switch true {
+				case FlagSignCount == 0:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 7)
+						EncriptedMsg .= chr(index + 34 + 5)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 1:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 4)
+						EncriptedMsg .= chr(index + 34 + 9)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 2:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 10)
+						EncriptedMsg .= chr(index + 34 + 4)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 3:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 21)
+						EncriptedMsg .= chr(index + 34 + 31)
+						FlagSignCount := 0
+						break
+					}
+				}
+			}
+		case ord(A_LoopField) > 96 and ord(A_LoopField) < 123:
+			; (a-z)
+			EncriptedString := A_LoopField
+			for index, letter in StrSplit(MixedPattern) {
+				switch true {
+				case Flag_az_Count == 0:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 27)
+						EncriptedMsg .= chr(index + 34 + 23)
+						Flag_az_Count++
+						break
+					}
+				case Flag_az_Count == 1:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 4)
+						EncriptedMsg .= chr(index + 34 + 12)
+						Flag_az_Count++
+						break
+					}
+				case Flag_az_Count == 2:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 19)
+						EncriptedMsg .= chr(index + 34 + 26)
+						Flag_az_Count := 0
+						break
+					}
+				}
+			}
+		case ord(A_LoopField) > 122 and ord(A_LoopField) < 127:
+			; punctuation signs
+			for index, letter in StrSplit(PunctuationPattern) {
+				switch true {
+				case FlagSignCount == 0:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 7)
+						EncriptedMsg .= chr(index + 34 + 5)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 1:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 4)
+						EncriptedMsg .= chr(index + 34 + 9)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 2:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 10)
+						EncriptedMsg .= chr(index + 34 + 4)
+						FlagSignCount++
+						break
+					}
+				case FlagSignCount == 3:
+					if (letter == A_LoopField) {
+						EncriptedMsg .= chr(index + 34 + 21)
+						EncriptedMsg .= chr(index + 34 + 31)
+						FlagSignCount := 0
+						break
+					}
+				}
+			}
+		}
+	}
+	return EncriptedMsg
+}
+;----------------------------------------------------
+DecriptMsg(EncriptedMsgMLGCR, *) {
+	MixedPattern := "Az0By9Cx7Da8Eb2Fc4Gw3Hv5Ij6Js1KlLhMpNeOtPgQnRrSiTqUoVkWmXdYfZu"
+	PunctuationPattern := "!#$%&'()*+,-./:;<=>?@[\]^_`"{|}~ "
+	DecriptedMsg := ""
+
+	count := 1
+	DiffValue := 0
+	IndexKey := 0
+	Loop Parse EncriptedMsgMLGCR {
+		if Mod(count, 2) == 1 {
+			RealKey := ord(A_LoopField)
+		}
+		
+		if Mod(count, 2) == 0 {
+			AddedKey1 := ord(A_LoopField)
+			DiffValue := Abs(RealKey - AddedKey1)
+			flagLetterFound := 0
+			switch true {
+			case DiffValue == 1:
+				IndexKey := RealKey - 34 - 11
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 2:
+				IndexKey := RealKey - 34 - 7
+				for index, letter in StrSplit(PunctuationPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 3:
+				IndexKey := RealKey - 34 - 4
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 4:
+				IndexKey := RealKey - 34 - 27
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 5:
+				IndexKey := RealKey - 34 - 4
+				for index, letter in StrSplit(PunctuationPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 6:
+				IndexKey := RealKey - 34 - 10
+				for index, letter in StrSplit(PunctuationPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 7:
+				IndexKey := RealKey - 34 - 19
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 8:
+				IndexKey := RealKey - 34 - 4
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 9:
+				IndexKey := RealKey - 34 - 7
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 10:
+				IndexKey := RealKey - 34 - 21
+				for index, letter in StrSplit(PunctuationPattern) {
+					if IndexKey < 0 {
+						; continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 11:
+				IndexKey := RealKey - 34 - 5
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 12:
+				IndexKey := RealKey - 34 - 14
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			case DiffValue == 14:
+				IndexKey := RealKey - 34 - 9
+				for index, letter in StrSplit(MixedPattern) {
+					if IndexKey < 0 {
+						continue
+					}
+					if index == IndexKey {
+						DecriptedMsg .= letter
+						break
+					}
+				}
+			}
+		}
+		count++
+	}
+	return DecriptedMsg
+}
+;----------------------------------------------------
+ParseRequest(*){
+	TempFileMLGCR := A_Temp . "\MLGCR_UpdateData.ini"
+	EncCurl := "NJdlcj]YIG27\dLFCMFRIGAF*3szeaHPipkgV^7>HDNVelqmRZ;5Wa]dqm\d[bieIGPXeleaHPszKG@EJR@GeaF@DAEP./COHQ45_kFT*3)&T\OVFG:FBM``iPQuq@Ldl=DT]Q[CQRS]ikgBK\d:;IUNWLSa](0XY_kZcRYEA(0\]ah4@;89Da]NWFNIW]dWSCKFM,)B>TUHP]iahEA<E@H@AEPmt4@4B9B:;O[;8<G9B@NLM4@dmNJV^jk_fDBFK_[NV]da]CK;5EO75@Ga]V^38_fmiNVW^{w4<93FMqm^fEOcjc_JRipZV75@L3<IJ27:F19RY_[:4LUNOCMCO19mtc_5309ZbaheaT\ip]YFN[bkg27Z[LTmtHDJR:4cjc_FN[bHDCK[bZVEOFN@GeaLTRYea"
+	RunWait(A_ComSpec " /c " . DecriptMsg(EncCurl) . " > " TempFileMLGCR, , "Hide")
+	
+	Count := 0
+	Loop Read, TempFileMLGCR
+	{
+		; Check if the current line is empty
+		if !A_LoopReadLine {
+			Count++
+			continue
+		}
+		
+		; Process the non-empty line here
+		Flag1stLetter := 0
+		CountOrd34 := 0
+		FlagAddedSpace := 0
+		CleanLine := ""
+		Loop parse A_LoopReadLine {
+			if ord(A_LoopField) == 34 {
+				CountOrd34++
+				if CountOrd34 == 4 {
+					break
+				}
+			}
+			if Flag1stLetter == 1 {
+				Switch true {
+				case ord(A_LoopField) == 32 and FlagAddedSpace == 0:
+					CleanLine .= A_LoopField
+					FlagAddedSpace := 1
+				case ord(A_LoopField) == 34 and FlagAddedSpace == 0:
+					CleanLine .= " "
+					FlagAddedSpace := 1
+				case ord(A_LoopField) == 44:
+					break
+				case ord(A_LoopField) != 34:
+					CleanLine .= A_LoopField
+					FlagAddedSpace := 0
+				}	
+			} 
+			if ord(A_LoopField) != 32 and Flag1stLetter == 0 {
+				Flag1stLetter := 1
+				if ord(A_LoopField) != 34 {
+					break
+				}
+			}
+		}
+		FileAppend CleanLine . "`n", TempCleanFileMLGCR
+		Match := RegExMatch(CleanLine, "tag_name : v\d+\.\d+", &tag_name)
+		Match2 := RegExMatch(CleanLine, "url : https://api.github.com/repos/FDJ-Dash/ML-Game-Controller-Remap/releases/assets/\d+", &download_url)
+		Match3 := RegExMatch(CleanLine, "name : \w+-\w+-\w+-\w+-\w+-v\d+\.\d+\.\w+", &name)
+		Switch true {
+		case Match == true:
+			for index, word in StrSplit(tag_name[0], A_Space) {
+				if index == 3 {
+					MLGCRLatestReleaseVersion := word
+					IniWrite MLGCRLatestReleaseVersion, DataFile, "GeneralData", "MLGCRLatestReleaseVersion"
+				}
+			}
+		case Match2 == true:
+			for index, word in StrSplit(download_url[0], A_Space) {
+				if index == 3 {
+					DownloadUrl := word
+					DownloadUrl := EncriptMsg(DownloadUrl)
+					IniWrite DownloadUrl, DataFile, "EncriptedData", "MLGCRDownload"
+				}
+			}
+		case Match3 == true:
+			for index, word in StrSplit(name[0], A_Space) {
+				if index == 3 {
+					Name := word
+					IniWrite Name, DataFile, "GeneralData", "MLGCRName"
+				}
+			}
+		}
+	}
+	
+	try {
+		FileDelete TempFileMLGCR
+	}
+	catch {
+
+	}
+}
+;----------------------------------------------------
+CheckConnection(*){
+	TempFileConnectionMLGCR := A_Temp . "\MLGCR_Connection.log"
+	RunWait(A_ComSpec " /c curl -k -L https://www.google.com > " TempFileConnectionMLGCR, , "Hide")
+	Match := false
+	Count := 0
+	Loop Read, TempFileConnectionMLGCR
+	{
+		; Check if the current line is empty
+		if !A_LoopReadLine {
+			Count++
+			continue
+		}
+		if Count > 0 {
+			Match := true
+			break
+		}
+		Count++
+	}
+	
+	try {
+		FileDelete TempFileConnectionMLGCR
+	}
+	catch {
+
+	}
+	return Match
+}
+;----------------------------------------------------
 MenuHandlerQuickFix(*) {
 	Send("{w up}")
 	Send("{shift up}")
 	Send("{Ctrl up}")
+	Reload
+}
+;----------------------------------------------------
+MenuHandlerUpdate(*){
+	SB.SetText("Checking for updates..")
+	Connection := CheckConnection()
+	if Connection != true {
+		ConnectionMessage()
+		return
+	}
+	ParseRequest()
+	DownloadUrl := IniRead(DataFile, "EncriptedData", "MLGCRDownload")
+	MLGCRLatestReleaseVersion := IniRead(DataFile, "GeneralData", "MLGCRLatestReleaseVersion")
+	IniWrite A_Now, IniFile, "Settings", "LastUpdateCheckTimeStamp"
+	if MLGCRLatestReleaseVersion != CurrentVersion {
+		if DownloadUrl != "" {
+			IniWrite true, IniFile, "Settings", "NeedUpdate"
+			NewVersionAvailableMessage(MLGCRLatestReleaseVersion)
+		}
+	}
+	If MLGCRLatestReleaseVersion == CurrentVersion {
+		UpToDateMessage
+	}
+}
+;----------------------------------------------------
+MenuHandlerCheckUptDaily(*){
+	CheckforUpdatesDaily := true
+	CheckforupdatesWeekly := false
+	NeverCheckForUpdates := false
+	IniWrite CheckforUpdatesDaily, IniFile, "Settings", "CheckforUpdatesDaily"
+	IniWrite CheckforupdatesWeekly, IniFile, "Settings", "CheckforupdatesWeekly"
+	IniWrite NeverCheckForUpdates, IniFile, "Settings", "NeverCheckForUpdates"
+	Reload
+}
+;----------------------------------------------------
+MenuHandlerCheckUptWeekly(*){
+	CheckforUpdatesDaily := false
+	CheckforupdatesWeekly := true
+	NeverCheckForUpdates := false
+	IniWrite CheckforUpdatesDaily, IniFile, "Settings", "CheckforUpdatesDaily"
+	IniWrite CheckforupdatesWeekly, IniFile, "Settings", "CheckforupdatesWeekly"
+	IniWrite NeverCheckForUpdates, IniFile, "Settings", "NeverCheckForUpdates"
+	Reload
+}
+;----------------------------------------------------
+MenuHandlerNeverCheckUpt(*){
+	CheckforUpdatesDaily := false
+	CheckforupdatesWeekly := false
+	NeverCheckForUpdates := true
+	IniWrite CheckforUpdatesDaily, IniFile, "Settings", "CheckforUpdatesDaily"
+	IniWrite CheckforupdatesWeekly, IniFile, "Settings", "CheckforupdatesWeekly"
+	IniWrite NeverCheckForUpdates, IniFile, "Settings", "NeverCheckForUpdates"
 	Reload
 }
 ;----------------------------------------------------
@@ -711,13 +1618,13 @@ EditIniFileHandler(*) {
 }
 ;----------------------------------------------------
 ChangeBackgroundHandler(*){
-	SelectedFile := FileSelect(3, "", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
+	SelectedFile := FileSelect("3", "A_MyDocuments", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
 	IniWrite SelectedFile, IniFile, "Background", "BackgroundPicture"
 	Reload
 }
 ;----------------------------------------------------
 ChangeMessageBackgroundHandler(*){
-	SelectedFile := FileSelect(3, "", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
+	SelectedFile := FileSelect("3", "A_MyDocuments", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
 	IniWrite SelectedFile, IniFile, "Background", "MessageBackgroundPicture"
 	Reload
 }
@@ -738,8 +1645,14 @@ if ControllerAvailable == true {
 
 	; Controller AutoRun Loop
 	Loop {
+		if GetKeyState(ExitGameControllerRemap){
+			ExitApp()
+		}
 		if RadioCtrlRemapYes.Value == true {
 			RadioCtrlRemapNo.Value := false
+			if GetKeyState(ExitGameControllerRemap){
+				ExitApp()
+			}
 			MouseGetPos(&x, &y)
 			SB.SetText("Controller remap active.        X:" . x . " Y:" . y )
 			; Status info axis
@@ -1184,16 +2097,43 @@ if ControllerAvailable == true {
 } ; End Controller Available
 ;----------------------------------------------------
 CreateNewIniFile(*) {
+	FileAppend "; ------------ Credits ------------`n" , IniFile
+	FileAppend "; Creator: Fernando Daniel Jaime.`n" , IniFile
+	FileAppend "; Programmer Alias: FDJ-Dash.`n" , IniFile
+	FileAppend "; Gamer Alias: Mean Little, Grey Dash, Dash.`n" , IniFile
+	FileAppend "; ------------ App Details ------------`n" , IniFile
+	FileAppend "; App Full Name: Mean Little's Game Controller Remap.`n" , IniFile
+	FileAppend "; Description: This is an app aimed towards game controller devices not recognized by some games`n" , IniFile
+	FileAppend "; but still recognized by the Operating System.`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "; HINT: If you delete this file or move it away from its forder,`n" , IniFile
 	FileAppend "; Game Controller Remap will generate a new file on the spot.`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
-	FileAppend "; WARNING: Don't set this file as read only!`n" , IniFile
+	FileAppend "; Find the list of key names here: https://www.autohotkey.com/docs/v2/KeyList.htm`n" , IniFile
+	FileAppend ";-------------------------------`n" , IniFile
+	FileAppend "; See the list of recommended fonts here: https://www.autohotkey.com/docs/v2/misc/FontsStandard.htm`n" , IniFile
+	FileAppend ";-------------------------------`n" , IniFile
+	FileAppend "; See the list of color names and RGB values here: https://www.autohotkey.com/docs/v2/misc/Colors.htm`n" , IniFile
+	FileAppend "; Black Silver Gray White Maroon Red Purple Fuchsia Green Lime Olive Yellow Navy Blue Teal Aqua`n" , IniFile
+	FileAppend "; If the color name you need is not listed you can still write its RGB value`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[Properties]`n" , IniFile
 	FileAppend "ExitMessageTimeWait=3000`n" , IniFile
 	FileAppend "GuiPriorityAlwaysOnTop=1`n" , IniFile
 	FileAppend "ControllerLoopInterval=100`n" , IniFile
+	FileAppend ";-------------------------------`n" , IniFile
+	FileAppend "PositionX=605`n" , IniFile
+	FileAppend "PositionY=324`n" , IniFile
+	FileAppend ";-------------------------------`n" , IniFile
+	FileAppend "ExitGameControllerRemap=Esc`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "[Settings]`n" , IniFile
+	FileAppend "CheckforUpdatesDaily=1`n" , IniFile
+	FileAppend "CheckforupdatesWeekly=0`n" , IniFile
+	FileAppend "NeverCheckForUpdates=0`n" , IniFile
+	FileAppend "NeedUpdate=0`n" , IniFile
+	FileAppend ";-------------------------------`n" , IniFile
+	FileAppend "LastUpdateCheckTimeStamp=`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[ControllerCursorMovement]`n" , IniFile
 	FileAppend "CursorSensRight=100`n" , IniFile
@@ -1247,18 +2187,12 @@ CreateNewIniFile(*) {
 	FileAppend "MessageMainMsgFontType=Georgia`n" , IniFile
 	FileAppend "MessageFontType=Georgia`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
-	FileAppend "; See the list of recommended fonts here: https://www.autohotkey.com/docs/v2/misc/FontsStandard.htm`n" , IniFile
-	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[FontColors]`n" , IniFile
-	FileAppend "MainFontColor=Lime`n" , IniFile
-	FileAppend "MessageAppNameFontColor=Lime`n" , IniFile
-	FileAppend "MessageMainMsgFontColor=Lime`n" , IniFile
-	FileAppend "MessageFontColor=Lime`n" , IniFile
+	FileAppend "MainFontColor=FF9933`n" , IniFile
+	FileAppend "MessageAppNameFontColor=FF9933`n" , IniFile
 	FileAppend "LicenseKeyFontColor=70A0FA`n" , IniFile
-	FileAppend ";--------------------------------------------------`n" , IniFile
-	FileAppend "; See the list of color names and RGB values here: https://www.autohotkey.com/docs/v2/misc/Colors.htm`n" , IniFile
-	FileAppend "; Black Silver Gray White Maroon Red Purple Fuchsia Green Lime Olive Yellow Navy Blue Teal Aqua`n" , IniFile
-	FileAppend "; If the color name you need is not listed you can still write its RGB value`n" , IniFile
+	FileAppend "MessageMainMsgFontColor=FF9933`n" , IniFile
+	FileAppend "MessageFontColor=FF9933`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[Background]`n" , IniFile
 	FileAppend "BackgroundColor=2F2F2F`n" , IniFile
