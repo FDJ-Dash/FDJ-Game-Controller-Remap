@@ -73,6 +73,13 @@ ReadBackground(&BackgroundMainColor,
 ReadProperties(&ExitMessageTimeWait, 
 			   &GuiPriorityAlwaysOnTop,
 			   &ControllerLoopInterval,
+			   &CtrlRemapYesNo,
+			   &NormalMode,
+			   &RaceMode,
+			   &CursorMovement,
+			   &RotateCamera,
+			   &RotateCameraCtrldown,
+			   &RotateCameraShiftdown,
 			   &PositionX,
 			   &PositionY,
 			   &ExitGameControllerRemap){
@@ -89,6 +96,33 @@ ReadProperties(&ExitMessageTimeWait,
 		ControllerLoopInterval := 0
 		IniWrite ControllerLoopInterval, IniFile, "Properties", "ControllerLoopInterval"
 	}
+	;-------------------------------
+	CtrlRemapYesNo := IniRead(IniFile, "Properties", "CtrlRemapYesNo")
+	if CtrlRemapYesNo < 0 or CtrlRemapYesNo > 1 or CtrlRemapYesNo == "" {
+		CtrlRemapYesNo := 0
+	}
+	;-------------------------------
+	NormalMode := IniRead(IniFile, "Properties", "NormalMode")
+	RaceMode := IniRead(IniFile, "Properties", "RaceMode")
+	if NormalMode < 0 or NormalMode > 1 or NormalMode == "" or
+	   RaceMode < 0 or RaceMode > 1 or RaceMode == "" {
+		NormalMode := 1
+		RaceMode := 0
+	}
+	;-------------------------------
+	CursorMovement := IniRead(IniFile, "Properties", "CursorMovement")
+	RotateCamera := IniRead(IniFile, "Properties", "RotateCamera")
+	RotateCameraCtrldown := IniRead(IniFile, "Properties", "RotateCameraCtrldown")
+	RotateCameraShiftdown := IniRead(IniFile, "Properties", "RotateCameraShiftdown")
+	if CursorMovement < 0 or CursorMovement > 1 or CursorMovement == "" or
+	   RotateCamera < 0 or RotateCamera > 1 or RotateCamera == "" or
+	   RotateCameraCtrldown < 0 or RotateCameraCtrldown > 1 or RotateCameraCtrldown == "" or
+	   RotateCameraShiftdown < 0 or RotateCameraShiftdown > 1 or RotateCameraShiftdown == ""{
+			CursorMovement := 1
+			RotateCamera := 0
+			RotateCameraCtrldown := 0
+			RotateCameraShiftdown := 0
+	   }
 	;-------------------------------
 	PositionX := IniRead(IniFile, "Properties", "PositionX")
 	PositionY := IniRead(IniFile, "Properties", "PositionY")

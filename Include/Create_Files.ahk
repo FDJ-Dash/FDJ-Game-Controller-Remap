@@ -29,10 +29,39 @@ CreateNewIniFile(*) {
 	FileAppend "; Black Silver Gray White Maroon Red Purple Fuchsia Green Lime Olive Yellow Navy Blue Teal Aqua`n" , IniFile
 	FileAppend "; If the color name you need is not listed you can still write its RGB value`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "[FontType]`n" , IniFile
+	FileAppend "MainFontType=Comic Sans MS`n" , IniFile
+	FileAppend "MessageAppNameFontType=Georgia`n" , IniFile
+	FileAppend "LicenseKeyFontType=Comic Sans MS`n" , IniFile
+	FileAppend "MessageMainMsgFontType=Georgia`n" , IniFile
+	FileAppend "MessageFontType=Georgia`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "[FontColors]`n" , IniFile
+	FileAppend "MainFontColor=FF9933`n" , IniFile
+	FileAppend "MessageAppNameFontColor=FF9933`n" , IniFile
+	FileAppend "LicenseKeyFontColor=70A0FA`n" , IniFile
+	FileAppend "MessageMainMsgFontColor=FF9933`n" , IniFile
+	FileAppend "MessageFontColor=FF9933`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
+	FileAppend "[Background]`n" , IniFile
+	FileAppend "BackgroundColor=2F2F2F`n" , IniFile
+	FileAppend "BackgroundPicture=`n" , IniFile
+	FileAppend "MessageBackgroundPicture=`n" , IniFile
+	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[Properties]`n" , IniFile
 	FileAppend "ExitMessageTimeWait=3000`n" , IniFile
 	FileAppend "GuiPriorityAlwaysOnTop=1`n" , IniFile
 	FileAppend "ControllerLoopInterval=100`n" , IniFile
+	FileAppend ";----------`n" , IniFile
+	FileAppend "CtrlRemapYesNo=1`n" , IniFile
+	FileAppend ";----------`n" , IniFile
+	FileAppend "NormalMode=1`n" , IniFile
+	FileAppend "RaceMode=0`n" , IniFile
+	FileAppend ";----------`n" , IniFile
+	FileAppend "CursorMovement=1`n" , IniFile
+	FileAppend "RotateCamera=0`n" , IniFile
+	FileAppend "RotateCameraCtrldown=0`n" , IniFile
+	FileAppend "RotateCameraShiftdown=0`n" , IniFile
 	FileAppend ";----------`n" , IniFile
 	FileAppend "PositionX=605`n" , IniFile
 	FileAppend "PositionY=324`n" , IniFile
@@ -47,10 +76,10 @@ CreateNewIniFile(*) {
 	FileAppend "LastUpdateCheckTimeStamp=`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[ControllerCursorMovement]`n" , IniFile
-	FileAppend "CursorSensRight=100`n" , IniFile
-	FileAppend "CursorSensDown=100`n" , IniFile
-	FileAppend "CursorSensLeft=-100`n" , IniFile
-	FileAppend "CursorSensUp=-100`n" , IniFile
+	FileAppend "CursorSensRight=10`n" , IniFile
+	FileAppend "CursorSensDown=10`n" , IniFile
+	FileAppend "CursorSensLeft=-10`n" , IniFile
+	FileAppend "CursorSensUp=-10`n" , IniFile
 	FileAppend "CursorSpeed=0`n" , IniFile
 	FileAppend ";--------------------------------------------------`n" , IniFile
 	FileAppend "[ControllerCameraRotation]`n" , IniFile
@@ -90,23 +119,4 @@ CreateNewIniFile(*) {
 	FileAppend "RespawnY=r`n" , IniFile
 	FileAppend "AcelerateButtonRT=w`n" , IniFile
 	FileAppend "ReverseButtonLT=s`n" , IniFile
-	FileAppend ";--------------------------------------------------`n" , IniFile
-	FileAppend "[FontType]`n" , IniFile
-	FileAppend "MainFontType=Comic Sans MS`n" , IniFile
-	FileAppend "MessageAppNameFontType=Georgia`n" , IniFile
-	FileAppend "LicenseKeyFontType=Comic Sans MS`n" , IniFile
-	FileAppend "MessageMainMsgFontType=Georgia`n" , IniFile
-	FileAppend "MessageFontType=Georgia`n" , IniFile
-	FileAppend ";--------------------------------------------------`n" , IniFile
-	FileAppend "[FontColors]`n" , IniFile
-	FileAppend "MainFontColor=FF9933`n" , IniFile
-	FileAppend "MessageAppNameFontColor=FF9933`n" , IniFile
-	FileAppend "LicenseKeyFontColor=70A0FA`n" , IniFile
-	FileAppend "MessageMainMsgFontColor=FF9933`n" , IniFile
-	FileAppend "MessageFontColor=FF9933`n" , IniFile
-	FileAppend ";--------------------------------------------------`n" , IniFile
-	FileAppend "[Background]`n" , IniFile
-	FileAppend "BackgroundColor=2F2F2F`n" , IniFile
-	FileAppend "BackgroundPicture=`n" , IniFile
-	FileAppend "MessageBackgroundPicture=`n" , IniFile
 }
