@@ -18,7 +18,7 @@ Global IconLib := A_ScriptDir . "\Icons"
 , TempCleanFileGCR := A_Temp . "\GCR_CleanFile.ini"
 , TempSystemFile := A_Temp . "\GCR_SystemFile.ini"
 , AppName := "Game Controller Remap"
-, CurrentVersion := "v1.4"
+, CurrentVersion := "v1.5"
 , FDJ_SoftwareIcon := "\Logo-FDJ-Dash.png"
 , DefaultMsgBackgroundImage := "\Smoke2.jpg"
 , Creator := " Fernando Daniel Jaime "
@@ -32,6 +32,7 @@ Global IconLib := A_ScriptDir . "\Icons"
 #Include "*i %A_ScriptDir%\Include\GameControllerRemapGui.ahk"
 #Include "*i %A_ScriptDir%\Include\Menu_Handlers.ahk"
 #Include "*i %A_ScriptDir%\Include\Message_Handlers.ahk"
+#Include "*i %A_ScriptDir%\Include\Submit_Handlers.ahk"
 #Include "*i %A_ScriptDir%\Include\Image_File_Select.ahk"
 #Include "*i %A_ScriptDir%\Include\General_Functions.ahk"
 ;----------------------------------------------------
@@ -40,6 +41,7 @@ Global IconLib := A_ScriptDir . "\Icons"
 DinamicReload := true
 GuiCount := 1
 GuiName := ""
+ControllerAvailable := true
 
 IniWrite DinamicReload, TempSystemFile, "GeneralData", "DinamicReload"
 IniWrite GuiCount, TempSystemFile, "GeneralData", "GuiCount"
@@ -49,6 +51,32 @@ IniWrite GuiName, TempSystemFile, "GeneralData", "GuiName"
 ;----------------------------------------------------
 Loop {
 	DinamicReload := IniRead(TempSystemFile, "GeneralData", "DinamicReload")
+	;----------------------------------------------------
+	; Auto-detect the controller number
+	;----------------------------------------------------
+	ControllerNumber := 0 ; Auto-detect Controller
+
+	if ControllerNumber <= 0
+	{
+		Loop 16  ; Query each controller number to find out which ones exist.
+		{
+			if GetKeyState(A_Index "JoyName")
+			{
+				ControllerNumber := A_Index
+				break
+			}
+		}
+		if ControllerNumber <= 0
+		{
+			ControllerAvailable := false
+		} else {
+			if ControllerAvailable == false {
+				ControllerAvailable := true
+				reload
+			}
+			ControllerAvailable := true
+		}
+	}
 	if DinamicReload == true {
 		;----------------------------------------------------
 		; Read Ini Properties - Create_Files.ahk
@@ -86,6 +114,13 @@ Loop {
 		ReadProperties(&ExitMessageTimeWait, 
 					   &GuiPriorityAlwaysOnTop,
 					   &ControllerLoopInterval,
+					   &CtrlRemapYesNo,
+					   &NormalMode,
+					   &RaceMode,
+					   &CursorMovement,
+					   &RotateCamera,
+					   &RotateCameraCtrldown,
+					   &RotateCameraShiftdown,
 					   &PositionX,
 					   &PositionY,
 					   &ExitGameControllerRemap)
@@ -206,8 +241,8 @@ Loop {
 			Controller(ControllerRemapGui1,
 					   &TextOnOffController,
 					   &ControllerName,
-					   &RadioCtrlRemapYes,
-					   &RadioCtrlRemapNo)
+					   &CtrlRemapYesNo,
+					   &ControllerAvailable)
 			;----------------------------------------------------
 			; Y-115 / Controller Status
 			;----------------------------------------------------
@@ -243,11 +278,15 @@ Loop {
 						    &DownloadUrl,
 						    &CurrentVersion)
 			;----------------------------------------------------
-			SB := ControllerRemapGui1.Add("StatusBar", , "Ready.")
+			if ControllerAvailable == false {
+				SB := ControllerRemapGui1.Add("StatusBar", , "Controller Not Found")
+			} else {
+				SB := ControllerRemapGui1.Add("StatusBar", , "Ready.")
+			}
 			;----------------------------------------------------
 			ControllerRemapGui1.OnEvent('Close', (*) => ExitApp())
 			ControllerRemapGui1.Title := AppName
-			ControllerRemapGui1.Show("x" . PositionX . " y" . PositionY . " w250 h422")
+			ControllerRemapGui1.Show("x" . PositionX . " y" . PositionY . " w250 h375")
 			Saved := ControllerRemapGui1.Submit(false)
 		} else {
 			;----------------------------------------------------
@@ -303,8 +342,8 @@ Loop {
 			Controller(ControllerRemapGui2,
 					   &TextOnOffController,
 					   &ControllerName,
-					   &RadioCtrlRemapYes,
-					   &RadioCtrlRemapNo)
+					   &CtrlRemapYesNo,
+					   &ControllerAvailable)
 			;----------------------------------------------------
 			; Y-115 / Controller Status
 			;----------------------------------------------------
@@ -340,11 +379,15 @@ Loop {
 						    &DownloadUrl,
 						    &CurrentVersion)
 			;----------------------------------------------------
-			SB := ControllerRemapGui2.Add("StatusBar", , "Ready.")
+			if ControllerAvailable == false {
+				SB := ControllerRemapGui2.Add("StatusBar", , "Controller Not Found")
+			} else {
+				SB := ControllerRemapGui2.Add("StatusBar", , "Ready.")
+			}
 			;----------------------------------------------------
 			ControllerRemapGui2.OnEvent('Close', (*) => ExitApp())
 			ControllerRemapGui2.Title := AppName
-			ControllerRemapGui2.Show("x" . PositionX . " y" . PositionY . " w250 h422")
+			ControllerRemapGui2.Show("x" . PositionX . " y" . PositionY . " w250 h375")
 			Saved := ControllerRemapGui2.Submit(false)
 		}
 		;----------------------------------------------------
@@ -363,28 +406,6 @@ Loop {
 		; OnExit Process - General_Functions.ahk
 		;----------------------------------------------------
 		OnExit ExitMenu
-		;----------------------------------------------------
-		; Auto-detect the controller number
-		;----------------------------------------------------
-		ControllerNumber := 0 ; Auto-detect Controller
-
-		if ControllerNumber <= 0
-		{
-			Loop 16  ; Query each controller number to find out which ones exist.
-			{
-				if GetKeyState(A_Index "JoyName")
-				{
-					ControllerNumber := A_Index
-					break
-				}
-			}
-			if ControllerNumber <= 0
-			{
-				ControllerAvailable := false
-			} else {
-				ControllerAvailable := true
-			}
-		}
 		;----------------------------------------------------
 		; Verify License
 		;----------------------------------------------------
@@ -426,42 +447,42 @@ Loop {
 		if GetKeyState(ExitGameControllerRemap, "P") == true {
 			ExitApp()
 		}
-		if RadioCtrlRemapYes.Value == true {
-			RadioCtrlRemapNo.Value := false
+		if CtrlRemapYesNo == true {
 			MouseGetPos(&x, &y)
 			SB.SetText("Controller remap active.        X:" . x . " Y:" . y )
 			; Status info axis
 			try {
 					axis_info := " X" Round(GetKeyState(ControllerNumber "JoyX"))
 				}
-				catch as e {
-					; the controller was disconnected
-					TextOnOffController.Value := " Controller Not Found."
-					ControllerName.Value := " "
-					axis_info := " -   -   -   -   -   -   -   -   -   -"
-					TextAxisInfo.Value := axis_info
-					break
-				}
+			catch as e {
+				; the controller was disconnected
+				TextOnOffController.Value := " Controller Not Found."
+				ControllerName.Value := " "
+				axis_info := " -   -   -   -   -   -   -   -   -   -"
+				TextAxisInfo.Value := axis_info
+				ControllerAvailable := false
+				reload
+			}
 			axis_info .= "  Y" Round(GetKeyState(ControllerNumber "JoyY"))
 			;----------------------------------------------------
 			; Jump Key - A
 			if GetKeyState(ControllerNumber "Joy1", "P") {
 				ButtonAOnOff.Value := " A"
-				if NormalMode.Value == true {
-					RaceMode.Value := false
+				if NormalMode == true {
+					RaceMode := false
 
 					Send("{" . ButtonA . " down}")
 				} else {
-					RaceMode.Value := true
+					RaceMode := true
 					Send("{" . AfterBurnerButtonA . " down}")
 				}
 			} else {
 				if ButtonAOnOff.Value == " A" {
-					if NormalMode.Value == true {
-						RaceMode.Value := false
+					if NormalMode == true {
+						RaceMode := false
 						Send("{" . ButtonA . " up}")
 					} else {
-						RaceMode.Value := true
+						RaceMode := true
 						Send("{" . AfterBurnerButtonA . " up}")
 					}
 					Send("{" . ButtonA . " up}")
@@ -494,20 +515,20 @@ Loop {
 			; Interaction Key - Y
 			if GetKeyState(ControllerNumber "Joy4", "P") {
 				ButtonYOnOff.Value := " Y"
-				if NormalMode.Value == true {
-					RaceMode.Value := false
+				if NormalMode == true {
+					RaceMode := false
 					Send("{" . ButtonY . " down}")
 				} else {
-					RaceMode.Value := true
+					RaceMode := true
 					Send("{" . RespawnY . " down}")
 				}
 			} else {
 				if ButtonYOnOff.Value == " Y" {
-					if NormalMode.Value == true {
-						RaceMode.Value := false
+					if NormalMode == true {
+						RaceMode := false
 						Send("{" . ButtonY . " up}")
 					} else {
-						RaceMode.Value := true
+						RaceMode := true
 						Send("{" . RespawnY . " up}")
 					}
 					ButtonYOnOff.Value := " - "
@@ -517,20 +538,20 @@ Loop {
 			;  Key - LB
 			if GetKeyState(ControllerNumber "Joy5", "P") {
 				ButtonLBOnOff.Value := "LB"
-				if NormalMode.Value == true {
-					RaceMode.Value := false
+				if NormalMode == true {
+					RaceMode := false
 					Send("{" . SprintLB . " down}")
 				} else {
-					RaceMode.Value := true
+					RaceMode := true
 					Send("{" . ButtonLB . " down}")
 				}
 			} else {
 				if ButtonLBOnOff.Value == "LB" {
-					if NormalMode.Value == true {
-						RaceMode.Value := false
+					if NormalMode == true {
+						RaceMode := false
 						Send("{" . SprintLB . " up}")
 					} else {
-						RaceMode.Value := true
+						RaceMode := true
 						Send("{" . ButtonLB . " up}")
 					}
 					ButtonLBOnOff.Value := " - "
@@ -540,20 +561,20 @@ Loop {
 			; Scanner Key - RB
 			if GetKeyState(ControllerNumber "Joy6", "P") {
 				ButtonRBOnOff.Value := "RB"
-				if NormalMode.Value == true {
-					RaceMode.Value := false
+				if NormalMode == true {
+					RaceMode := false
 					Send("{" . ScannerRB . " down}")
 				} else {
-					RaceMode.Value := true
+					RaceMode := true
 					Send("{" . ButtonRB . " down}")
 				}
 			} else {
 				if ButtonRBOnOff.Value == "RB" {
-					if NormalMode.Value == true {
-						RaceMode.Value := false
+					if NormalMode == true {
+						RaceMode := false
 						Send("{" . ScannerRB . " up}")
 					} else {
-						RaceMode.Value := true
+						RaceMode := true
 						Send("{" . ButtonRB . " up}")
 					}
 					ButtonRBOnOff.Value := " - "
@@ -616,10 +637,21 @@ Loop {
 			;----------------------------------------------------
 			; LT and RT
 			if InStr(cont_info, "Z") {
-				axis_info_Z := Round(GetKeyState(ControllerNumber "JoyZ"))
+				try {
+					axis_info_Z := Round(GetKeyState(ControllerNumber "JoyZ"))
+				}
+				catch as e {
+					; the controller was disconnected
+					TextOnOffController.Value := " Controller Not Found."
+					ControllerName.Value := " "
+					axis_info := " -   -   -   -   -   -   -   -   -   -"
+					TextAxisInfo.Value := axis_info
+					ControllerAvailable := false
+					reload
+				}
 				axis_info .= "  Z" Round(GetKeyState(ControllerNumber "JoyZ"))
-				if NormalMode.Value == true {
-					RaceMode.Value := false
+				if NormalMode == true {
+					RaceMode := false
 					if axis_info_Z >= 45 and axis_info_Z <= 55 {
 						Send("{" . ButtonLT . " up}")
 						Send("{" . ButtonRT . " up}")
@@ -635,7 +667,7 @@ Loop {
 						Send("{" . ButtonLT . " down}")
 					}
 				} else {
-					RaceMode.Value := true
+					RaceMode := true
 					if axis_info_Z >= 45 and axis_info_Z <= 55 {
 						Send("{" . ReverseButtonLT . " up}")
 						Send("{" . AcelerateButtonRT . " up}")
@@ -655,26 +687,37 @@ Loop {
 			;----------------------------------------------------
 			if InStr(cont_info, "R"){
 				; MouseMove X, Y , Speed, Relative
-				axis_info_R := Round(GetKeyState(ControllerNumber "JoyR"))
+				try {
+					axis_info_R := Round(GetKeyState(ControllerNumber "JoyR"))
+				}
+				catch as e {
+					; the controller was disconnected
+					TextOnOffController.Value := " Controller Not Found."
+					ControllerName.Value := " "
+					axis_info := " -   -   -   -   -   -   -   -   -   -"
+					TextAxisInfo.Value := axis_info
+					ControllerAvailable := false
+					reload
+				}
 				axis_info .= "  R" Round(GetKeyState(ControllerNumber "JoyR"))
 				if axis_info_R >= 45 and axis_info_R <= 55 {
 					Switch true {
-					case CursorMovement.Value:
+					case CursorMovement:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateUp . " up}")
 						Send("{" . RotateDown . " up}")
-					case RotateCamera.Value:
+					case RotateCamera:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateUp . " up}")
 						Send("{" . RotateDown . " up}")
-					case RotateCameraCtrldown.Value:
+					case RotateCameraCtrldown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateUp . " up}")
 						Send("{" . RotateDown . " up}")
-					case RotateCameraShiftdown.Value:
+					case RotateCameraShiftdown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateUp . " up}")
@@ -684,20 +727,20 @@ Loop {
 				; Look Up
 				if axis_info_R < 45 {
 					Switch true {
-					case CursorMovement.Value:
+					case CursorMovement:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						MouseGetPos(&x, &y)
 						DllCall("SetCursorPos", "int", x, "int", y + CursorSensUp)
-					case RotateCamera.Value:
+					case RotateCamera:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateUp . " down}")
-					case RotateCameraCtrldown.Value:
+					case RotateCameraCtrldown:
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . CtrlDownRotation . " down}")
 						Send("{" . RotateUp . " down}")
-					case RotateCameraShiftdown.Value:
+					case RotateCameraShiftdown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " down}")
 						Send("{" . RotateUp . " down}")
@@ -706,20 +749,20 @@ Loop {
 				; Look Down
 				if axis_info_R > 55 {
 					Switch true {
-					case CursorMovement.Value:
+					case CursorMovement:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						MouseGetPos(&x, &y)
 						DllCall("SetCursorPos", "int", x, "int", y + CursorSensDown)
-					case RotateCamera.Value:
+					case RotateCamera:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateDown . " down}")
-					case RotateCameraCtrldown.Value:
+					case RotateCameraCtrldown:
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . CtrlDownRotation . " down}")
 						Send("{" . RotateDown . " down}")	
-					case RotateCameraShiftdown.Value:
+					case RotateCameraShiftdown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " down}")
 						Send("{" . RotateDown . " down}")
@@ -728,26 +771,37 @@ Loop {
 			}
 			;----------------------------------------------------
 			if InStr(cont_info, "U") {
-				axis_info_U := Round(GetKeyState(ControllerNumber "JoyU"))
+				try {
+					axis_info_U := Round(GetKeyState(ControllerNumber "JoyU"))
+				}
+				catch as e {
+					; the controller was disconnected
+					TextOnOffController.Value := " Controller Not Found."
+					ControllerName.Value := " "
+					axis_info := " -   -   -   -   -   -   -   -   -   -"
+					TextAxisInfo.Value := axis_info
+					ControllerAvailable := false
+					reload
+				}
 				axis_info .= "  U" Round(GetKeyState(ControllerNumber "JoyU"))
 				if axis_info_U >= 45 and axis_info_U <= 55 {
 					Switch true {
-					case CursorMovement.Value:
+					case CursorMovement:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateLeft . " up}")
 						Send("{" . RotateRight . " up}")
-					case RotateCamera.Value:
+					case RotateCamera:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateUp . " up}")
 						Send("{" . RotateDown . " up}")
-					case RotateCameraCtrldown.Value:
+					case RotateCameraCtrldown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateLeft . " up}")
 						Send("{" . RotateRight . " up}")
-					case RotateCameraShiftdown.Value:
+					case RotateCameraShiftdown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateLeft . " up}")
@@ -757,20 +811,20 @@ Loop {
 				; Look Left
 				if axis_info_U < 45 {
 					Switch true {
-					case CursorMovement.Value:
+					case CursorMovement:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						MouseGetPos(&x, &y)
 						DllCall("SetCursorPos", "int", x + CursorSensLeft, "int", y)
-					case RotateCamera.Value:
+					case RotateCamera:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateLeft . " down}")
-					case RotateCameraCtrldown.Value:
+					case RotateCameraCtrldown:
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . CtrlDownRotation . " down}")
 						Send("{" . RotateLeft . " down}")
-					case RotateCameraShiftdown.Value:
+					case RotateCameraShiftdown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " down}")
 						Send("{" . RotateLeft . " down}")
@@ -779,20 +833,20 @@ Loop {
 				; Look Right
 				if axis_info_U > 55 {
 					Switch true {
-					case CursorMovement.Value:
+					case CursorMovement:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						MouseGetPos(&x, &y)
 						DllCall("SetCursorPos", "int", x + CursorSensRight, "int", y)
-					case RotateCamera.Value:
+					case RotateCamera:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . RotateRight . " down}")
-					case RotateCameraCtrldown.Value:
+					case RotateCameraCtrldown:
 						Send("{" . ShiftDownRotation . " up}")
 						Send("{" . CtrlDownRotation . " down}")
 						Send("{" . RotateRight . " down}")
-					case RotateCameraShiftdown.Value:
+					case RotateCameraShiftdown:
 						Send("{" . CtrlDownRotation . " up}")
 						Send("{" . ShiftDownRotation . " down}")
 						Send("{" . RotateRight . " down}")
@@ -801,11 +855,33 @@ Loop {
 			}
 			;----------------------------------------------------
 			if InStr(cont_info, "V") {
-				axis_info_V :=  Round(GetKeyState(ControllerNumber "JoyV"))
+				try {
+					axis_info_V :=  Round(GetKeyState(ControllerNumber "JoyV"))
+				}
+				catch as e {
+					; the controller was disconnected
+					TextOnOffController.Value := " Controller Not Found."
+					ControllerName.Value := " "
+					axis_info := " -   -   -   -   -   -   -   -   -   -"
+					TextAxisInfo.Value := axis_info
+					ControllerAvailable := false
+					reload
+				}
 			}
 			;----------------------------------------------------
 			if InStr(cont_info, "P") {
-				axis_info_POV := Round(GetKeyState(ControllerNumber "JoyPOV"))
+				try {
+					axis_info_POV := Round(GetKeyState(ControllerNumber "JoyPOV"))
+				}
+				catch as e {
+					; the controller was disconnected
+					TextOnOffController.Value := " Controller Not Found."
+					ControllerName.Value := " "
+					axis_info := " -   -   -   -   -   -   -   -   -   -"
+					TextAxisInfo.Value := axis_info
+					ControllerAvailable := false
+					reload
+				}
 				axis_info .= "  POV" Round(GetKeyState(ControllerNumber "JoyPOV"))
 				if axis_info_POV == -1 {
 					Send("{" . LeftPOV . " up}")

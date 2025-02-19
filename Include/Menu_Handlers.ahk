@@ -110,16 +110,7 @@ MenuHandlerQuickFix(*) {
 	Send("{w up}")
 	Send("{shift up}")
 	Send("{Ctrl up}")
-	; Reload
-	GuiName := IniRead(TempSystemFile, "GeneralData", "GuiName")
-	if GuiName == "ControllerRemapGui1" {
-		ControllerRemapGui1.GetPos(&PosX, &PosY)
-	} else {
-		ControllerRemapGui2.GetPos(&PosX, &PosY)
-	}
-	IniWrite PosX, IniFile, "Properties", "PositionX"
-	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	Reload
 }
 ;----------------------------------------------------
 GuiPriorityAlwaysOnTopHandler(*){
