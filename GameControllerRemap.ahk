@@ -8,7 +8,10 @@
 ; --------------------------------
 #Requires Autohotkey v2
 #SingleInstance
+ListLines False
+#NoTrayIcon
 SetWorkingDir(A_ScriptDir)
+
 Global IconLib := A_ScriptDir . "\Icons"
 , ImageLib := A_ScriptDir . "\Images"
 , Guide := "https://fdj-software.gitbook.io/apps"
@@ -18,11 +21,10 @@ Global IconLib := A_ScriptDir . "\Icons"
 , TempCleanFileGCR := A_Temp . "\GCR_CleanFile.ini"
 , TempSystemFile := A_Temp . "\GCR_SystemFile.ini"
 , AppName := "Game Controller Remap"
-, CurrentVersion := "v1.5"
+, CurrentVersion := "v2.0"
 , FDJ_SoftwareIcon := "\Logo-FDJ-Dash.png"
 , DefaultMsgBackgroundImage := "\Smoke2.jpg"
 , Creator := " Fernando Daniel Jaime "
-
 ;----------------------------------------------------
 ; Libraries
 ;----------------------------------------------------
@@ -35,22 +37,57 @@ Global IconLib := A_ScriptDir . "\Icons"
 #Include "*i %A_ScriptDir%\Include\Submit_Handlers.ahk"
 #Include "*i %A_ScriptDir%\Include\Image_File_Select.ahk"
 #Include "*i %A_ScriptDir%\Include\General_Functions.ahk"
+#Include "*i %A_ScriptDir%\Include\ClassDefinitions.ahk"
 ;----------------------------------------------------
-; Dinamic Reload variables
+; Database Libraries
 ;----------------------------------------------------
-DinamicReload := true
+#Include "*i %A_ScriptDir%\Include\Forms_Handler.ahk"
+#Include "*i %A_ScriptDir%\Include\DatabaseMsgHandler.ahk"
+#Include "*i %A_ScriptDir%\MySQLAPI-v1.1.ahk"
+#Include "*i %A_ScriptDir%\DB_Interactions.ahk"
+;----------------------------------------------------
+; Mail Variables
+;----------------------------------------------------
+MailPswd := MailPswdGen()
+;----------------------------------------------------
+; DynamicReload variables
+;----------------------------------------------------
+DynamicReload := true
 GuiCount := 1
 GuiName := ""
 ControllerAvailable := true
-
-IniWrite DinamicReload, TempSystemFile, "GeneralData", "DinamicReload"
+IniWrite DynamicReload, TempSystemFile, "GeneralData", "DynamicReload"
 IniWrite GuiCount, TempSystemFile, "GeneralData", "GuiCount"
 IniWrite GuiName, TempSystemFile, "GeneralData", "GuiName"
+;----------------------------------------------------
+; Get Device License Data
+;----------------------------------------------------
+StringMacAddress := GetMacAddress()
+LicenseKey := EncryptMsg(StringMacAddress)
+;----------------------------------------------------
+; Check connection every minute
+;----------------------------------------------------
+totalTime := 60000
+remainingTime := totalTime
+elapsed := 0
+KeepChecking := false
 ;----------------------------------------------------
 ; General Loop Start
 ;----------------------------------------------------
 Loop {
-	DinamicReload := IniRead(TempSystemFile, "GeneralData", "DinamicReload")
+	DynamicReload := IniRead(TempSystemFile, "GeneralData", "DynamicReload")
+	;----------------------------------------------------
+	; Read License Data
+	;----------------------------------------------------
+	try {
+		LicenseKeyInFile := IniRead(LicenseFile, "Data", "LicenseKey")
+		UserName := IniRead(LicenseFile, "Data", "UserName")
+		DeviceNumber := IniRead(LicenseFile, "Data", "DeviceNumber")
+	}
+	catch as e {
+		; License file is missing. Exitapp once all is loaded 
+		LicenseKeyInFile := ""
+	}
 	;----------------------------------------------------
 	; Auto-detect the controller number
 	;----------------------------------------------------
@@ -77,7 +114,7 @@ Loop {
 			ControllerAvailable := true
 		}
 	}
-	if DinamicReload == true {
+	if DynamicReload == true {
 		;----------------------------------------------------
 		; Read Ini Properties - Create_Files.ahk
 		;----------------------------------------------------
@@ -187,7 +224,7 @@ Loop {
 		;----------------------------------------------------
 		if Mod(GuiCount, 2) == 1 {
 			;----------------------------------------------------
-			; GUI 1 instance - Inside Dinamic Reload
+			; GUI 1 instance - Inside DynamicReload
 			;----------------------------------------------------
 			GuiName := "ControllerRemapGui1"
 			IniWrite GuiName, TempSystemFile, "GeneralData", "GuiName"
@@ -242,7 +279,9 @@ Loop {
 					   &TextOnOffController,
 					   &ControllerName,
 					   &CtrlRemapYesNo,
-					   &ControllerAvailable)
+					   &ControllerAvailable,
+					   &LicenseKeyInFile,
+					   &LicenseKey)
 			;----------------------------------------------------
 			; Y-115 / Controller Status
 			;----------------------------------------------------
@@ -261,7 +300,9 @@ Loop {
 							 &CursorMovement,
 							 &RotateCamera,
 							 &RotateCameraCtrldown,
-							 &RotateCameraShiftdown)
+							 &RotateCameraShiftdown,
+							 &LicenseKeyInFile,
+							 &LicenseKey)
 			;----------------------------------------------------
 			; Y-371 / Check for updates
 			;----------------------------------------------------
@@ -278,9 +319,12 @@ Loop {
 						    &DownloadUrl,
 						    &CurrentVersion)
 			;----------------------------------------------------
-			if ControllerAvailable == false {
+			switch true {
+			case LicenseKeyInFile != LicenseKey:
+				SB := ControllerRemapGui1.Add("StatusBar", , "Awaiting login or registration..")
+			case ControllerAvailable == false:
 				SB := ControllerRemapGui1.Add("StatusBar", , "Controller Not Found")
-			} else {
+			default:
 				SB := ControllerRemapGui1.Add("StatusBar", , "Ready.")
 			}
 			;----------------------------------------------------
@@ -290,7 +334,7 @@ Loop {
 			Saved := ControllerRemapGui1.Submit(false)
 		} else {
 			;----------------------------------------------------
-			; GUI 2 instance - Inside Dinamic Reload
+			; GUI 2 instance - Inside DynamicReload
 			;----------------------------------------------------
 			GuiName := "ControllerRemapGui2"
 			IniWrite GuiName, TempSystemFile, "GeneralData", "GuiName"
@@ -343,7 +387,9 @@ Loop {
 					   &TextOnOffController,
 					   &ControllerName,
 					   &CtrlRemapYesNo,
-					   &ControllerAvailable)
+					   &ControllerAvailable,
+					   &LicenseKeyInFile,
+					   &LicenseKey)
 			;----------------------------------------------------
 			; Y-115 / Controller Status
 			;----------------------------------------------------
@@ -362,7 +408,9 @@ Loop {
 							 &CursorMovement,
 							 &RotateCamera,
 							 &RotateCameraCtrldown,
-							 &RotateCameraShiftdown)
+							 &RotateCameraShiftdown,
+							 &LicenseKeyInFile,
+							 &LicenseKey)
 			;----------------------------------------------------
 			; Y-371 / Check for updates
 			;----------------------------------------------------
@@ -379,9 +427,12 @@ Loop {
 						    &DownloadUrl,
 						    &CurrentVersion)
 			;----------------------------------------------------
-			if ControllerAvailable == false {
+			switch true {
+			case LicenseKeyInFile != LicenseKey:
+				SB := ControllerRemapGui2.Add("StatusBar", , "Awaiting login or registration..")
+			case ControllerAvailable == false:
 				SB := ControllerRemapGui2.Add("StatusBar", , "Controller Not Found")
-			} else {
+			default:
 				SB := ControllerRemapGui2.Add("StatusBar", , "Ready.")
 			}
 			;----------------------------------------------------
@@ -407,38 +458,210 @@ Loop {
 		;----------------------------------------------------
 		OnExit ExitMenu
 		;----------------------------------------------------
-		; Verify License
+		; Validate Connection
 		;----------------------------------------------------
-		StringMacAddress := GetMacAddress()
-		LicenseKey := EncriptMsg(StringMacAddress)
-
+		Connected := CheckConnection()
+		;----------------------------------------------------
+		; Validate license key and Device Number
+		;----------------------------------------------------
 		try {
 			LicenseKeyInFile := IniRead(LicenseFile, "Data", "LicenseKey")
+			DeviceNumber := IniRead(LicenseFile, "Data", "DeviceNumber")
+			LicenceAmount := IniRead(LicenseFile, "Data", "LicenceAmount")
+			UserName := IniRead(LicenseFile, "Data", "UserName")
 		}
 		catch as e {
 			; License file is missing
 			ExitApp(3)
 		}
-
-		Switch true {
-		case LicenseKeyInFile == "":
-			IniWrite LicenseKey, LicenseFile, "Data", "LicenseKey"
-		case LicenseKeyInFile == LicenseKey:
-		case LicenseKeyInFile != LicenseKey:
-			; Invalid License
-			ExitApp(2)
+		;----------------------------------------------------
+		; Validate Session
+		;----------------------------------------------------
+		try {
+		SessionKey := CurrentSessionKey()
 		}
+		catch {
+		    ; No Session Generated
+			SessionKey := ""
+		}
+		NewSessionKey := SessionGenerationKey()
+		if SessionKey != NewSessionKey {
+			;------------------------
+			CustomerId := ""
+			switch true {
+			case Connected != true:
+				KeepChecking := true
+			case LicenseKeyInFile != LicenseKey:
+			    SB.SetText("Authenticating..")
+				VerifyingPortAccess()
+				MySqlInst := DatabaseConnetion()
+				;------------------------
+				QueryResult := MySqlInst.Query("SELECT * FROM gcr_mac WHERE Mac_Address='" StringMacAddress "'" )
+				if QueryResult == 0 {
+					KeepChecking := false
+					ResultSet := MySqlInst.GetResult()
+					Device := 0
+					for k, v in ResultSet.Rows {
+						; Process each row (Could be more than 1 row)
+						if StringMacAddress == v["Mac_Address"] {
+							Device := v["Device_Number"]
+							CustomerId := v["Customer_Id"]
+							; Add missing device number silently
+							DeviceNumber := Device
+							IniWrite Device, LicenseFile, "Data", "DeviceNumber"
+						}
+					}
+					if DeviceNumber != Device {
+						; Device not found
+						LoginOrRegister()
+					}
+				} else {
+					; Unable to connect to server - Using VPN
+					if Connected == true {
+						; Port 3306 is blocked.
+						Port3306Blocked()
+					} else {
+						LoginOrRegister()
+						CheckConnectionMsg()
+					}
+				}
+				LoginOrRegister()
+			case UserName == "" or LicenceAmount == "":
+			    SB.SetText("Authenticating..")
+				VerifyingPortAccess()
+				FlagSession := False
+				MySqlInst := DatabaseConnetion()
+				;------------------------
+				QueryResult := MySqlInst.Query("SELECT * FROM gcr_mac WHERE Mac_Address='" StringMacAddress "'" )
+				if QueryResult == 0 {
+					KeepChecking := false
+					ResultSet := MySqlInst.GetResult()
+					Device := 0
+					DeviceNumber := ""
+					CountDevice := 0
+					for k, v in ResultSet.Rows {
+						; Process each row (Could be more than 1 row)
+						if StringMacAddress == v["Mac_Address"] {
+							Device := v["Device_Number"]
+							CustomerId := v["Customer_Id"]
+							; Add missing device number silently
+							DeviceNumber := Device
+							IniWrite Device, LicenseFile, "Data", "DeviceNumber"
+							FlagSession := true
+						}
+					}
+					if DeviceNumber != Device {
+						; Device not found
+						LoginOrRegister()
+					}
+				} else {
+					; Unable to connect to server - Using VPN
+					if Connected == true {
+						; Port 3306 is blocked.
+						Port3306Blocked()
+					} else {
+						LoginOrRegister()
+						CheckConnectionMsg()
+					}
+				}
+				;------------------------
+				if CustomerId != "" {
+					QueryResult := MySqlInst.Query("SELECT * FROM billing_gcr WHERE Customer_Id='" CustomerId "'" )
+					if QueryResult == 0 {
+						ResultSet := MySqlInst.GetResult()
+						for k, v in ResultSet.Rows {
+							; Process each row (Will always be a unique row for billing_gcr table)
+							LicAmountGCR := v["Lic_Amount_GCR"]
+							IniWrite LicAmountGCR, LicenseFile, "Data", "LicenceAmount"
+						}
+					}
+					if UserName == "" {
+						QueryResult := MySqlInst.Query("SELECT * FROM customers WHERE Customer_Id='" CustomerId "'")
+						if QueryResult == 0 {
+							ResultSet := MySqlInst.GetResult()
+							for k, v in ResultSet.Rows {
+								; Process each row (Will always be a unique row for customers table)
+								UserName := v["User_Name"]
+								IniWrite UserName, LicenseFile, "Data", "UserName"
+							}
+						}
+					}
+				}
+				if FlagSession == true {
+				    SetSessionKey(NewSessionKey)
+				}
+			default:
+				SB.SetText("Authenticating..")
+				VerifyingPortAccess()
+				FlagSession := False
+				MySqlInst := DatabaseConnetion()
+				;------------------------
+				QueryResult := MySqlInst.Query("SELECT * FROM gcr_mac WHERE Mac_Address='" StringMacAddress "'" )
+				if QueryResult == 0 {
+					KeepChecking := false
+					ResultSet := MySqlInst.GetResult()
+					Device := 0
+					DeviceNumber := ""
+					for k, v in ResultSet.Rows {
+						; Process each row (Could be more than 1 row)
+						if StringMacAddress == v["Mac_Address"] {
+							Device := v["Device_Number"]
+							CustomerId := v["Customer_Id"]
+							; Add missing device number silently
+							DeviceNumber := Device
+							IniWrite Device, LicenseFile, "Data", "DeviceNumber"
+							FlagSession := true
+							SB.SetText("Ready.")
+						}
+					}
+					if DeviceNumber != Device {
+						; Device not found
+						LoginOrRegister()
+					}
+				} else {
+					; Unable to connect to server - Using VPN
+					if Connected == true {
+						; Port 3306 is blocked.
+						Port3306Blocked()
+					} else {
+						LoginOrRegister()
+						CheckConnectionMsg()
+					}
+				}
+				if FlagSession == true {
+				    SetSessionKey(NewSessionKey)
+				}
+			} ; End switch
+		}
+		
 		;----------------------------------------------------
-		; Set DinamicReload to false again
+		; Set DynamicReload to false again
 		;----------------------------------------------------
-		DinamicReload := false
-		IniWrite DinamicReload, TempSystemFile, "GeneralData", "DinamicReload"
+		DynamicReload := false
+		IniWrite DynamicReload, TempSystemFile, "GeneralData", "DynamicReload"
 		;----------------------------------------------------
 	} ; End DimamicReload / GUI Static code
 	;----------------------------------------------------
-	; Dinamic code starts here
+	; Dynamic code starts here
 	;----------------------------------------------------
-	if ControllerAvailable == true {
+	if KeepChecking == true {
+		elapsed += ControllerLoopInterval 
+		remainingTime := round((totalTime - elapsed) / 1000)
+		if (remainingTime <= 0) {
+			remainingTime := 0
+		}
+	}
+	if remainingTime == 0 {
+		remainingTime := totalTime
+		elapsed := 0
+	    ; Check connection again
+		Connected := CheckConnection()
+		if Connected == true {
+		    IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
+		}
+	}
+	
+    if ControllerAvailable == true {
 		TextOnOffController.Value := " Controller Found"
 		ControllerName.Value := GetKeyState(ControllerNumber "JoyName")
 		cont_info := GetKeyState(ControllerNumber "JoyInfo")
@@ -449,7 +672,7 @@ Loop {
 		}
 		if CtrlRemapYesNo == true {
 			MouseGetPos(&x, &y)
-			SB.SetText("Controller remap active.        X:" . x . " Y:" . y )
+			SB.SetText("Ready.                          X:" . x . " Y:" . y )
 			; Status info axis
 			try {
 					axis_info := " X" Round(GetKeyState(ControllerNumber "JoyX"))
@@ -943,6 +1166,9 @@ Loop {
 			axis_info := " -   -   -   -   -   -   -   -   -   -"
 		}
 		TextAxisInfo.Value := axis_info
-		Sleep ControllerLoopInterval
 	} ; End Controller Available
+	else {
+	    SB.SetText("No Controller Found.")
+	}
+	Sleep ControllerLoopInterval
 } ; End General loop

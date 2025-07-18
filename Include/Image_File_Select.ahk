@@ -13,7 +13,7 @@
 ChangeBackgroundHandler(*){
 	SelectedFile := FileSelect(3, "", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
 	IniWrite SelectedFile, IniFile, "Background", "BackgroundPicture"
-	; Reload
+	; DynamicReload
 	GuiName := IniRead(TempSystemFile, "GeneralData", "GuiName")
 	if GuiName == "ControllerRemapGui1" {
 		ControllerRemapGui1.GetPos(&PosX, &PosY)
@@ -22,13 +22,13 @@ ChangeBackgroundHandler(*){
 	}
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 ChangeMessageBackgroundHandler(*){
 	SelectedFile := FileSelect(3, "", "Open a file", "Text Documents (*.ico; *.png; *.jpg)")
 	IniWrite SelectedFile, IniFile, "Background", "MessageBackgroundPicture"
-	; Reload
+	; DynamicReload
 	GuiName := IniRead(TempSystemFile, "GeneralData", "GuiName")
 	if GuiName == "ControllerRemapGui1" {
 		ControllerRemapGui1.GetPos(&PosX, &PosY)
@@ -37,5 +37,5 @@ ChangeMessageBackgroundHandler(*){
 	}
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
