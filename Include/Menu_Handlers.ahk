@@ -15,6 +15,7 @@
 ; MenuHandlerNeverCheckUpt(*)
 ; MenuHandlerQuickFix(*)
 ; GuiPriorityAlwaysOnTopHandler(*)
+; MenuHandlerManageDevices(*)
 ;----------------------------------------------------
 MenuHandlerExit(*){
 	ExitApp()
@@ -32,7 +33,7 @@ MenuHandlerUpdate(*){
 		return
 	}
 	ParseRequest()
-	DownloadUrl := IniRead(DataFile, "EncriptedData", "GCRDownload")
+	DownloadUrl := IniRead(DataFile, "EncryptedData", "GCRDownload")
 	GCRLatestReleaseVersion := IniRead(DataFile, "GeneralData", "GCRLatestReleaseVersion")
 	IniWrite A_Now, IniFile, "Settings", "LastUpdateCheckTimeStamp"
 	if GCRLatestReleaseVersion != CurrentVersion {
@@ -65,7 +66,7 @@ MenuHandlerCheckUptDaily(*){
 	}
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 MenuHandlerCheckUptWeekly(*){
@@ -84,7 +85,7 @@ MenuHandlerCheckUptWeekly(*){
 	}
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 MenuHandlerNeverCheckUpt(*){
@@ -103,7 +104,7 @@ MenuHandlerNeverCheckUpt(*){
 	}
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 MenuHandlerQuickFix(*) {
@@ -126,5 +127,9 @@ GuiPriorityAlwaysOnTopHandler(*){
 	}
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
+}
+;----------------------------------------------------
+MenuHandlerManageDevices(*) {
+    MenuManageDevices()
 }

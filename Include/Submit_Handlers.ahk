@@ -29,10 +29,10 @@ SubmitCtrlRemap(*) {
 	CtrlRemapYesNo := IniRead(IniFile, "Properties", "CtrlRemapYesNo")
 	CtrlRemapYesNo := !CtrlRemapYesNo
 	IniWrite CtrlRemapYesNo, IniFile, "Properties", "CtrlRemapYesNo"
-	; Dinamic Reload
+	; Dynamic Reload
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 ; Submit Normal Mode
@@ -48,10 +48,10 @@ SubmitNormalMode(*) {
 	}
 	IniWrite true, IniFile, "Properties", "NormalMode"
 	IniWrite false, IniFile, "Properties", "RaceMode"
-	; Dinamic Reload
+	; Dynamic Reload
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 ; Submit Race Mode
@@ -67,10 +67,10 @@ SubmitRaceMode(*) {
 	}
 	IniWrite true, IniFile, "Properties", "RaceMode"
 	IniWrite false, IniFile, "Properties", "NormalMode"
-	; Dinamic Reload
+	; Dynamic Reload
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 ; Submit Cursor Movement
@@ -88,10 +88,10 @@ SubmitCursorMovement(*) {
 	IniWrite false, IniFile, "Properties", "RotateCamera"
 	IniWrite false, IniFile, "Properties", "RotateCameraCtrldown"
 	IniWrite false, IniFile, "Properties", "RotateCameraShiftdown"
-	; Dinamic Reload
+	; Dynamic Reload
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 ; Submit Rotate Camera
@@ -109,10 +109,10 @@ SubmitRotateCamera(*) {
 	IniWrite true, IniFile, "Properties", "RotateCamera"
 	IniWrite false, IniFile, "Properties", "RotateCameraCtrldown"
 	IniWrite false, IniFile, "Properties", "RotateCameraShiftdown"
-	; Dinamic Reload
+	; Dynamic Reload
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 ; Submit Rotate Camera Ctrl down
@@ -130,10 +130,10 @@ SubmitRotateCameraCtrldown(*) {
 	IniWrite false, IniFile, "Properties", "RotateCamera"
 	IniWrite true, IniFile, "Properties", "RotateCameraCtrldown"
 	IniWrite false, IniFile, "Properties", "RotateCameraShiftdown"
-	; Dinamic Reload
+	; Dynamic Reload
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }
 ;----------------------------------------------------
 ; Submit Rotate Camera Shift down
@@ -151,8 +151,8 @@ SubmitRotateCameraShiftdown(*) {
 	IniWrite false, IniFile, "Properties", "RotateCamera"
 	IniWrite false, IniFile, "Properties", "RotateCameraCtrldown"
 	IniWrite true, IniFile, "Properties", "RotateCameraShiftdown"
-	; Dinamic Reload
+	; Dynamic Reload
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
-	IniWrite true, TempSystemFile, "GeneralData", "DinamicReload"
+	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
 }

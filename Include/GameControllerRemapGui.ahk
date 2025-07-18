@@ -17,7 +17,9 @@ Controller(ControllerRemapGui,
 		   &TextOnOffController,
 		   &ControllerName,
 		   &CtrlRemapYesNo,
-		   &ControllerAvailable){
+		   &ControllerAvailable,
+		   &LicenseKeyInFile,
+		   &LicenseKey){
 	;-------------------------------
 	ControllerRemapGui.Add("Text","x10 y10 w68 h20 +0x200", " Controller:")
 	TextOnOffController := ControllerRemapGui.Add("Text","x85 y10 w155 h20 +0x200", " Controller Not Found.")
@@ -26,7 +28,7 @@ Controller(ControllerRemapGui,
 	ControllerRemapGui.Add("Text", "x1 y59 w250 h2 +0x10") ; Separator
 	;----------------------------------------------------
 	switch true {
-	case ControllerAvailable == false:
+	case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
 		GCRButton := ControllerRemapGui.Add("Button", "x10 y65 w175 h20 +disabled", "Turn ON")
 		ControllerRemapGui.Add("Text","x193 y65 w30 h20 +0x200", " OFF ")
 		ControllerRemapGui.Add("Picture", "x230 y69 w10 h10 +border", IconLib . "\OrangeIcon.png")
@@ -63,7 +65,9 @@ ControllerStatus(&TextAxisInfo,
 				 &CursorMovement,
 				 &RotateCamera,
 				 &RotateCameraCtrldown,
-				 &RotateCameraShiftdown){
+				 &RotateCameraShiftdown,
+				 &LicenseKeyInFile,
+				 &LicenseKey){
 	;-------------------------------
 	TextAxisInfo := ControllerRemapGui.Add("Text","x20 y95 w212 h20 +0x200", " " )
 	ButtonAOnOff := ControllerRemapGui.Add("Text","x20 y120 w20 h20 +0x200", " - ")
@@ -76,7 +80,7 @@ ControllerStatus(&TextAxisInfo,
 	ButtonStartOnOff := ControllerRemapGui.Add("Text","x185 y120 w47 h20 +0x200", "-   -")
 	;-----------------
 	switch true {
-	case ControllerAvailable == false:
+	case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
 		SelectButtonN := ControllerRemapGui.Add("Button", "x10 y145 w175 h20 +disabled", "Normal Mode")
 		ControllerRemapGui.Add("Text","x193 y145 w30 h20 +0x200", " OFF ")
 		ControllerRemapGui.Add("Picture", "x230 y149 w10 h10 +border", IconLib . "\OrangeIcon.png")
@@ -128,7 +132,7 @@ ControllerStatus(&TextAxisInfo,
 	ControllerRemapGui.Add("Text","x80 y195 w90 h20 +0x200", " Camera Rotation")
 	;-----------------
 	switch true {
-	case ControllerAvailable == false:
+	case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
 		SelectButton1 := ControllerRemapGui.Add("Button", "x10 y220 w175 h20 +disabled", "Cursor Movement")
 		SelectButton1.OnEvent("Click", SubmitCursorMovement)
 		ControllerRemapGui.Add("Text","x193 y220 w30 h20 +0x200", " OFF ")
@@ -263,8 +267,6 @@ ControllerStatus(&TextAxisInfo,
 		ControllerRemapGui.SetFont("s8 Bold cFF9933", LicenseKeyFontType)
 		;-----------------
 	}
-	
-	; ControllerRemapGui.Add("Text", "x1 y318 w250 h2 +0x10") ; Separator
 }
 ;----------------------------------------------------
 ; Y-371 / Check for updates
@@ -282,7 +284,6 @@ CheckForUpdates(ControllerRemapGui,
 				&DownloadUrl,
 				&CurrentVersion){
 	;-------------------------------
-	; ControllerRemapGui.Add("Text", "x1 y371 w250 h2 +0x10") ; Separator
 	ControllerRemapGui.Add("Text", "x1 y318 w250 h2 +0x10") ; Separator
 	FlagCheckTime := false
 
@@ -347,7 +348,7 @@ CheckForUpdates(ControllerRemapGui,
 			if GCRLatestReleaseVersion == "" {
 				ParseRequest()
 			}
-			DownloadUrl := IniRead(DataFile, "EncriptedData", "GCRDownload")
+			DownloadUrl := IniRead(DataFile, "EncryptedData", "GCRDownload")
 			GCRLatestReleaseVersion := IniRead(DataFile, "GeneralData", "GCRLatestReleaseVersion")
 			if GCRLatestReleaseVersion != CurrentVersion {
 				if DownloadUrl != "" {
