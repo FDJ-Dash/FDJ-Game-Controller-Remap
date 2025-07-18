@@ -57,15 +57,7 @@ RegisterUser(Email, Pswd, UserName, ReceiptId, LicAmountGCR, DateGCR, MacAddress
 	}
 	return QueryResult
 }
-; Email := "test4@gmail.com"
-; Pswd := "at12345"
-; UserName := "user4"
-; ReceiptId := "bbbb-bbbb-cccc-dddd"
-; Lic_Amount_GCR := 3
-; Date_GCR := A_Now
-; Date_GCR := FormatTime(Date_GCR, "yyyy-MM-dd")
-; MacAddress := "AC-BD-CD-1F-1A-CC"
-; RegisterUser(Email, Pswd, UserName, ReceiptId, Lic_Amount_GCR, Date_GCR, MacAddress)
+
 ;----------------------------------------------------
 ; Validate User
 ;----------------------------------------------------
@@ -114,9 +106,6 @@ ValidateUser(Email, Pswd, MacAddress, ReceiptId, LicAmount, DateGCR) {
 				if QueryResult == 0 {
 					ResultSet := MySqlInst.GetResult()
 					RowCount := 0
-					; MacAddress := "CC-11-43-DD-10-22"
-					; MacAddress := "AA-00-34-DE-EE-0A"
-					; MacAddress := "01-02-33-5F-AA-5C"
 					for k, v in ResultSet.Rows {
 						; Process each row (Could be more than 1 row)
 						; if MacAddress is already registered then login successful
@@ -155,10 +144,6 @@ ValidateUser(Email, Pswd, MacAddress, ReceiptId, LicAmount, DateGCR) {
 	return 1
 }
 
-; Email := "test4@gmail.com"
-; Pswd := "at12345"
-; MacAddress := "01-09-CD-5F-AA-CC"
-; ValidateUser(Email, Pswd, MacAddress)
 ;----------------------------------------------------
 ; Update Mac Address
 ;----------------------------------------------------
@@ -203,10 +188,6 @@ UpdateMacAddress(Email, Pswd, MacAddress) {
 	}
 }
 
-; Email := "test4@gmail.com"
-; Pswd := "at12345"
-; MacAddress := "01-02-33-5F-AA-5C"
-; UpdateMacAddress(Email, Pswd, MacAddress)
 ;----------------------------------------------------
 ; Validate Mail
 ;----------------------------------------------------
