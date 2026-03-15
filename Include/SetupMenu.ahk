@@ -52,14 +52,11 @@ SetupMenuBar(&MenuBar_Storage,
 	SettingsMenu.Add("Check for updates &daily", MenuHandlerCheckUptDaily)
 	SettingsMenu.Add("Check for updates &weekly", MenuHandlerCheckUptWeekly)
 	SettingsMenu.Add("&Never check for updates", MenuHandlerNeverCheckUpt)
-	SettingsMenu.Insert()
-	SettingsMenu.Add("&Manage app licenses across multiple devices", MenuHandlerManageDevices)
 
 	try {
 		SettingsMenu.SetIcon("Check for updates &daily", IconLib . "\CheckDaily.png")
 		SettingsMenu.SetIcon("Check for updates &weekly", IconLib . "\CheckWeekly.png")
 		SettingsMenu.SetIcon("&Never check for updates", IconLib . "\stop.ico")
-		SettingsMenu.SetIcon("&Manage app licenses across multiple devices", IconLib . "\info.ico")
 	}
 	catch {
 	}

@@ -28,7 +28,8 @@ Controller(ControllerRemapGui,
 	ControllerRemapGui.Add("Text", "x1 y59 w250 h2 +0x10") ; Separator
 	;----------------------------------------------------
 	switch true {
-	case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
+	; case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
+	case ControllerAvailable == false:
 		GCRButton := ControllerRemapGui.Add("Button", "x10 y65 w175 h20 +disabled", "Turn ON")
 		ControllerRemapGui.Add("Text","x193 y65 w30 h20 +0x200", " OFF ")
 		ControllerRemapGui.Add("Picture", "x230 y69 w10 h10 +border", IconLib . "\OrangeIcon.png")
@@ -80,7 +81,8 @@ ControllerStatus(&TextAxisInfo,
 	ButtonStartOnOff := ControllerRemapGui.Add("Text","x185 y120 w47 h20 +0x200", "-   -")
 	;-----------------
 	switch true {
-	case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
+	; case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
+	case ControllerAvailable == false:
 		SelectButtonN := ControllerRemapGui.Add("Button", "x10 y145 w175 h20 +disabled", "Normal Mode")
 		ControllerRemapGui.Add("Text","x193 y145 w30 h20 +0x200", " OFF ")
 		ControllerRemapGui.Add("Picture", "x230 y149 w10 h10 +border", IconLib . "\OrangeIcon.png")
@@ -132,7 +134,8 @@ ControllerStatus(&TextAxisInfo,
 	ControllerRemapGui.Add("Text","x80 y195 w90 h20 +0x200", " Camera Rotation")
 	;-----------------
 	switch true {
-	case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
+	; case ControllerAvailable == false or LicenseKeyInFile != LicenseKey:
+	case ControllerAvailable == false:
 		SelectButton1 := ControllerRemapGui.Add("Button", "x10 y220 w175 h20 +disabled", "Cursor Movement")
 		SelectButton1.OnEvent("Click", SubmitCursorMovement)
 		ControllerRemapGui.Add("Text","x193 y220 w30 h20 +0x200", " OFF ")

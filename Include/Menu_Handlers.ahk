@@ -15,7 +15,6 @@
 ; MenuHandlerNeverCheckUpt(*)
 ; MenuHandlerQuickFix(*)
 ; GuiPriorityAlwaysOnTopHandler(*)
-; MenuHandlerManageDevices(*)
 ;----------------------------------------------------
 MenuHandlerExit(*){
 	ExitApp()
@@ -128,8 +127,4 @@ GuiPriorityAlwaysOnTopHandler(*){
 	IniWrite PosX, IniFile, "Properties", "PositionX"
 	IniWrite PosY, IniFile, "Properties", "PositionY"
 	IniWrite true, TempSystemFile, "GeneralData", "DynamicReload"
-}
-;----------------------------------------------------
-MenuHandlerManageDevices(*) {
-    MenuManageDevices()
 }
